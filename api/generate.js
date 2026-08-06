@@ -1,35 +1,10 @@
-import formidable from 'formidable';
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-const parseForm = (req) => {
-  return new Promise((resolve, reject) => {
-    const form = formidable({ multiples: false });
-    form.parse(req, (err, fields, files) => {
-      if (err) return reject(err);
-      const normalizedFields = {};
-      for (const key in fields) {
-        normalizedFields[key] = Array.isArray(fields[key]) ? fields[key][0] : fields[key];
-      }
-      resolve({ fields: normalizedFields });
-    });
-  });
-};
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
   try {
-    const { fields } = await parseForm(req);
-    const productName = fields.productName;
-    const keyBenefit = fields.keyBenefit;
-    const bgOption = fields.bgOption || 'Fondo Escritorio';
+    const { productName, keyBenefit, bgOption } = req.body;
 
     if (!productName || !keyBenefit) {
       return res.status(400).json({ error: 'Faltan datos obligatorios (productName o keyBenefit)' });
@@ -39,7 +14,7 @@ export default async function handler(req, res) {
       Actúa como un experto en marketing digital. Crea contenidos altamente atractivos para redes sociales.
       Producto: "${productName}"
       Beneficio principal: "${keyBenefit}"
-      Entorno visual de venta: "${bgOption}"
+      Entorno visual de venta: "${bgOption || 'Fondo Escritorio'}"
       
       Devuelve la respuesta estrictamente en este formato JSON puro, sin bloques de código markdown ni explicaciones adicionales:
       {
@@ -75,7 +50,6 @@ export default async function handler(req, res) {
     const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const generatedContent = JSON.parse(cleanedText);
 
-    // Mapeo detallado de entornos para la generación visual comercial enfocada en Instagram
     let environmentDescription = "modern professional setting";
     if (bgOption === 'Fondo Oficina') environmentDescription = "modern corporate office interior with soft natural lighting";
     else if (bgOption === 'Fondo Escritorio') environmentDescription = "clean minimalist desk setup, aesthetic workspace";
