@@ -80,8 +80,11 @@ export default async function handler(req, res) {
     const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const generatedContent = JSON.parse(cleanedText);
 
-    // Prompt visual reforzado con restricciones estrictas para prohibir la creación de objetos y garantizar el espacio vacío
-    const visualPrompt = encodeURIComponent(`Professional macro photography of an EMPTY, COMPLETELY BLANK, FLAT SURFACE. No objects, no products, no items. Just a high-quality ${bgOption} background, clean minimalist aesthetic, studio lighting, photorealistic, 8k resolution, professional bokeh, high-end advertising photography, clear space in the center for product placement.`);
+   // Prompt visual técnico: eliminamos cualquier mención a "producto" o "placement"
+    // para evitar que el motor de IA sienta la necesidad de dibujar un objeto central.
+    const visualPrompt = encodeURIComponent(`Professional macro interior photography of an empty ${bgOption}. The entire center and foreground are completely clear, vacant, and empty. Architectural shot, clean lines, minimalist, cinematic lighting, photorealistic, 8k, bokeh, no objects, no boxes, no shapes in the center, negative space.`);
+    
+    const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=1080&height=1080&nologo=true&enhance=true&seed=${Math.floor(Math.random() * 10000)}`;
     
     // Incluimos un seed aleatorio para evitar que el generador repita la misma imagen en caché
     const randomSeed = Math.floor(Math.random() * 10000);
