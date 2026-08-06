@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const submitButton = document.getElementById('tu-boton-accion');
+  const submitButton = document.getElementById('tu-boton-accion'); // Verifica que el ID coincida con tu HTML
   
   const instagramOutput = document.getElementById('instagram-output');
   const tiktokOutput = document.getElementById('tiktok-output');
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const originalText = submitButton.textContent;
-      submitButton.textContent = 'Analizando tu producto 3D...';
+      submitButton.textContent = 'Analizando pieza 3D y generando entorno...';
       submitButton.disabled = true;
 
       try {

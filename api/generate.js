@@ -42,16 +42,18 @@ export default async function handler(req, res) {
       };
     }
 
+    // Prompt enriquecido: Instruimos a la IA a fijarse muy bien en la pieza 3D subida
     const promptTexto = `
-      Actúa como un experto en marketing digital y fotografía comercial.
-      Analiza la imagen adjunta de este producto impreso en 3D ("${productName}") y su beneficio ("${keyBenefit}").
-      Entorno visual seleccionado: "${bgOption}".
+      Actúa como un experto en marketing digital para una marca de impresión 3D llamada TonizLab 3D.
+      Analiza detalladamente la imagen adjunta de este producto real impreso en 3D ("${productName}") y su beneficio principal ("${keyBenefit}").
+      Observa sus formas, colores (si los tiene), geometría y utilidad. 
+      El producto se presentará en el entorno visual: "${bgOption}".
       
       Devuelve la respuesta estrictamente en este formato JSON puro, sin bloques de código markdown ni texto adicional:
       {
-        "instagram_copy": "Un texto persuasivo y comercial para Instagram basado en las características reales de la foto del producto, emojis, párrafos y llamada a la acción.",
-        "tiktok_copy": "Un guion dinámico y corto para TikTok adaptado al producto, con ganchos iniciales.",
-        "hashtags": "#hashtag1 #hashtag2 #hashtag3 #hashtag4 #hashtag5"
+        "instagram_copy": "Un texto persuasivo y muy descriptivo para Instagram. Menciona detalles visuales reales que veas en la foto de la pieza, usa emojis, párrafos cortos y una llamada a la acción.",
+        "tiktok_copy": "Un guion dinámico y corto para TikTok, enfocado en mostrar la funcionalidad de la pieza impresa en 3D, con ganchos iniciales.",
+        "hashtags": "#TonizLab3D #Impresion3D #hashtag3 #hashtag4 #hashtag5"
       }
     `;
 
@@ -60,7 +62,6 @@ export default async function handler(req, res) {
       contents[0].parts.push(imagePart);
     }
 
-    // Usando la versión solicitada: gemini-3.6-flash
     const textApiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
@@ -86,8 +87,8 @@ export default async function handler(req, res) {
     } catch (e) {
       console.error('Error al convertir la respuesta de Gemini a JSON:', rawText);
       generatedContent = {
-        instagram_copy: "¡Lleva la organización y el diseño de tu espacio al siguiente nivel! Descubre la funcionalidad que te faltaba. 🚀",
-        tiktok_copy: "POV: Encontraste la pieza perfecta para tu setup. 👇",
+        instagram_copy: "¡Descubre la precisión y el diseño de nuestras nuevas piezas en TonizLab 3D! Funcionalidad que transforma tu espacio. 🚀",
+        tiktok_copy: "POV: La pieza impresa en 3D que le faltaba a tu setup. 👇",
         hashtags: "#TonizLab3D #Impresion3D #DiseñoFuncional"
       };
     }
@@ -103,7 +104,6 @@ export default async function handler(req, res) {
     
     const selectedSurface = surfaceMap[bgOption] || 'clean flat table surface';
 
-    // Prompt visual ajustado
     const visualPrompt = encodeURIComponent(`Macro close-up photography of an empty ${selectedSurface}. The flat surface occupies the entire foreground and is completely blank and empty. Blurred background. Depth of field, bokeh, product photography style, strictly NO objects on the table, 8k resolution, highly detailed.`);
     
     const randomSeed = Math.floor(Math.random() * 100000);
