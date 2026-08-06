@@ -1,84 +1,64 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('social-automation-form');
+  const form = document.getElementById('generate-form'); // O el ID real de tu formulario
+  const submitButton = document.getElementById('tu-boton-accion'); // El botón de "Ejecutar acción"
   
-  if (!form) return;
+  const instagramOutput = document.getElementById('instagram-output');
+  const tiktokOutput = document.getElementById('tiktok-output');
+  const hashtagsOutput = document.getElementById('hashtags-output');
+  const imageElement = document.getElementById('imagen-resultado'); // La etiqueta <img>
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  if (submitButton) {
+    submitButton.addEventListener('click', async (e) => {
+      e.preventDefault();
 
-    // Capturar valores del formulario
-    const productName = document.getElementById('productName').value.trim();
-    const keyBenefit = document.getElementById('keyBenefit').value.trim();
-    const bgOptionSelected = document.querySelector('input[name="bgOption"]:checked');
-    const bgOption = bgOptionSelected ? bgOptionSelected.value : 'ninguno';
+      // Captura los valores de tus inputs (asegúrate de que los IDs coincidan con tu HTML)
+      const productName = document.getElementById('product-name')?.value;
+      const keyBenefit = document.getElementById('key-benefit')?.value;
+      const bgOption = document.getElementById('bg-option')?.value || 'Estudio profesional';
 
-    if (!productName || !keyBenefit) {
-      alert('Por favor completa el nombre del producto y el beneficio principal.');
-      return;
-    }
-
-    // Buscar o crear un contenedor de resultados dinámico
-    let resultContainer = document.getElementById('ai-results-output');
-    if (!resultContainer) {
-      resultContainer = document.createElement('div');
-      resultContainer.id = 'ai-results-output';
-      resultContainer.style.marginTop = '20px';
-      form.appendChild(resultContainer);
-    }
-
-    resultContainer.innerHTML = '<p>✨ Generando contenido con IA, por favor espera...</p>';
-
-    try {
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          productName,
-          keyBenefit,
-          bgOption
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al generar el contenido');
+      if (!productName || !keyBenefit) {
+        alert('Por favor completa los campos obligatorios del producto y beneficio.');
+        return;
       }
 
-      // Renderizar los resultados de forma visual y atractiva
-      resultContainer.innerHTML = `
-        <div style="background: #1e293b; padding: 20px; border-radius: 8px; color: #fff; margin-top: 15px; border: 1px solid #334155;">
-          <h3 style="color: #38bdf8; margin-top: 0;">🚀 ¡Publicación Generada con Éxito!</h3>
-          
-          <div style="margin-bottom: 15px;">
-            <strong style="color: #cbd5e1;">📱 Copy para Instagram:</strong>
-            <p style="background: #0f172a; padding: 10px; border-radius: 6px; white-space: pre-wrap; margin: 5px 0;">${data.instagram_copy}</p>
-          </div>
+      // Estado de carga visual en el botón
+      submitButton.textContent = 'Generando contenido...';
+      submitButton.disabled = true;
 
-          <div style="margin-bottom: 15px;">
-            <strong style="color: #cbd5e1;">🎵 Copy para TikTok:</strong>
-            <p style="background: #0f172a; padding: 10px; border-radius: 6px; white-space: pre-wrap; margin: 5px 0;">${data.tiktok_copy}</p>
-          </div>
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ productName, keyBenefit, bgOption }),
+        });
 
-          <div style="margin-bottom: 15px;">
-            <strong style="color: #cbd5e1;"># Hashtags:</strong>
-            <p style="color: #38bdf8; background: #0f172a; padding: 10px; border-radius: 6px; margin: 5px 0;">${data.hashtags}</p>
-          </div>
+        const data = await response.json();
 
-          <div>
-            <strong style="color: #cbd5e1;">🖼️ Imagen con Fondo (${bgOption}):</strong>
-            <div style="margin-top: 8px;">
-              <img src="${data.image_url}" alt="Imagen con fondo IA" style="max-width: 100%; height: auto; border-radius: 6px; border: 1px solid #475569;" />
-            </div>
-          </div>
-        </div>
-      `;
+        if (!response.ok) {
+          throw new Error(data.error || 'Error al conectar con el servidor');
+        }
 
-    } catch (error) {
-      console.error(error);
-      resultContainer.innerHTML = `<p style="color: #f87171;">❌ Hubo un error: ${error.message}</p>`;
-    }
-  });
+        // Mostrar los resultados en la interfaz
+        if (instagramOutput) instagramOutput.textContent = data.instagram_copy;
+        if (tiktokOutput) tiktokOutput.textContent = data.tiktok_copy;
+        if (hashtagsOutput) hashtagsOutput.textContent = data.hashtags;
+
+        // Mostrar la imagen generada correctamente
+        if (imageElement && data.image_url) {
+          imageElement.src = data.image_url;
+          imageElement.style.display = 'block';
+        }
+
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Hubo un error: ' + error.message);
+      } finally {
+        // Restaurar el estado del botón
+        submitButton.textContent = 'Ejecutar acción';
+        submitButton.disabled = false;
+      }
+    });
+  }
 });
