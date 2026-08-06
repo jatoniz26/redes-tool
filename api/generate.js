@@ -3,7 +3,7 @@ import fs from 'fs';
 
 export const config = {
   api: {
-    bodyParser: false, // Desactivar el parser por defecto para recibir archivos binarios con formidable
+    bodyParser: false,
   },
 };
 
@@ -80,13 +80,8 @@ export default async function handler(req, res) {
     const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const generatedContent = JSON.parse(cleanedText);
 
-   // Prompt visual técnico: eliminamos cualquier mención a "producto" o "placement"
-    // para evitar que el motor de IA sienta la necesidad de dibujar un objeto central.
     const visualPrompt = encodeURIComponent(`Professional macro interior photography of an empty ${bgOption}. The entire center and foreground are completely clear, vacant, and empty. Architectural shot, clean lines, minimalist, cinematic lighting, photorealistic, 8k, bokeh, no objects, no boxes, no shapes in the center, negative space.`);
     
-    const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=1080&height=1080&nologo=true&enhance=true&seed=${Math.floor(Math.random() * 10000)}`;
-    
-    // Incluimos un seed aleatorio para evitar que el generador repita la misma imagen en caché
     const randomSeed = Math.floor(Math.random() * 10000);
     const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=1080&height=1080&nologo=true&enhance=true&seed=${randomSeed}`;
 
