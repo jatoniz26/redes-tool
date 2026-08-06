@@ -47,7 +47,7 @@ export default async function handler(req, res) {
       Analiza la imagen adjunta de este producto impreso en 3D ("${productName}") y su beneficio ("${keyBenefit}").
       Entorno visual seleccionado: "${bgOption}".
       
-      Devuelve la respuesta estrictamente en este formato JSON puro, sin bloques de código markdown ni texto adicional:
+      Devuelve la respuesta estrictamente en este formato JSON puro, sin bloques de código ni texto adicional:
       {
         "instagram_copy": "Un texto persuasivo y comercial para Instagram basado en las características reales de la foto del producto, emojis, párrafos y llamada a la acción.",
         "tiktok_copy": "Un guion dinámico y corto para TikTok adaptado al producto, con ganchos iniciales.",
@@ -60,9 +60,8 @@ export default async function handler(req, res) {
       contents[0].parts.push(imagePart);
     }
 
-    // ACTUALIZACIÓN CLAVE: Uso del modelo actual gemini-2.5-flash
     const textApiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -84,15 +83,14 @@ export default async function handler(req, res) {
       const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
       generatedContent = JSON.parse(cleanedText);
     } catch (e) {
-      console.error('Error al convertir la respuesta de Gemini a JSON:', rawText);
+      console.error('Error al convertir a JSON:', rawText);
       generatedContent = {
         instagram_copy: "¡Lleva la organización y el diseño de tu espacio al siguiente nivel! Descubre la funcionalidad que te faltaba. 🚀",
         tiktok_copy: "POV: Encontraste la pieza perfecta para tu setup. 👇",
-        hashtags: "#TonizLab3D #Impresion3D #DiseñoFuncional"
+        hashtags: "#Impresion3D #DiseñoFuncional"
       };
     }
 
-    // Mapeo preciso de texturas
     const surfaceMap = {
       'Fondo Escritorio': 'clean wooden desk surface',
       'Fondo Oficina': 'sleek executive office desk surface',
@@ -104,7 +102,6 @@ export default async function handler(req, res) {
     
     const selectedSurface = surfaceMap[bgOption] || 'clean flat table surface';
 
-    // Generación visual que fuerza un plano macro (close-up) de la mesa, sin espacio para dibujar habitaciones vacías
     const visualPrompt = encodeURIComponent(`Macro close-up photography of an empty ${selectedSurface}. The flat surface occupies the entire foreground and is completely blank and empty. Blurred background. Depth of field, bokeh, product photography style, strictly NO objects on the table, 8k resolution, highly detailed.`);
     
     const randomSeed = Math.floor(Math.random() * 100000);
