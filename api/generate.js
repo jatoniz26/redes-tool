@@ -10,20 +10,21 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Faltan datos obligatorios' });
     }
 
+    // Prompt enriquecido con tono comercial, emojis y estructura clara
     const promptTexto = `
-      Crea textos promocionales para un producto llamado "${productName}". 
-      Beneficio principal: "${keyBenefit}".
-      Entorno de la foto: "${bgOption}".
+      Actúa como un experto en marketing digital. Crea contenidos altamente atractivos para redes sociales.
+      Producto: "${productName}"
+      Beneficio principal: "${keyBenefit}"
+      Entorno/Fondo visual deseado: "${bgOption}"
       
-      Devuelve la respuesta estrictamente en este formato JSON sin markdown, ni formato adicional, solo el objeto puro:
+      Devuelve la respuesta estrictamente en este formato JSON puro (sin bloques de markdown como \`\`\`json, solo el objeto):
       {
-        "instagram_copy": "Aquí va el texto para Instagram",
-        "tiktok_copy": "Aquí va el texto para TikTok",
-        "hashtags": "#tag1 #tag2 #tag3"
+        "instagram_copy": "Un texto persuasivo y comercial para Instagram, usando emojis atractivos, estructura en párrafos y una llamada a la acción.",
+        "tiktok_copy": "Un guion o texto dinámico y corto para TikTok, muy moderno, con ganchos iniciales y emojis.",
+        "hashtags": "#hashtag1 #hashtag2 #hashtag3 #hashtag4 #hashtag5"
       }
     `;
 
-    // Usamos el modelo correcto compatible con v1beta
     const textApiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
@@ -45,10 +46,14 @@ export default async function handler(req, res) {
     }
 
     const textData = await textApiResponse.json();
-    const generatedText = textData.candidates[0].content.parts[0].text;
-    const generatedContent = JSON.parse(generatedText);
+    const rawText = textData.candidates[0].content.parts[0].text;
+    
+    // Limpieza por si la IA devuelve bloques de código markdown por error
+    const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const generatedContent = JSON.parse(cleanedText);
 
-    const imageUrl = "https://via.placeholder.com/600x600?text=Fondo+Generado"; 
+    // Placeholder visual mientras integramos la generación de imagen por IA
+    const imageUrl = "https://via.placeholder.com/600x600?text=Fondo+IA+Generado"; 
 
     return res.status(200).json({
       instagram_copy: generatedContent.instagram_copy,
