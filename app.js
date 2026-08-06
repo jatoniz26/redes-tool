@@ -11,10 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     submitButton.addEventListener('click', async (e) => {
       e.preventDefault();
 
-      // Captura de valores usando los IDs exactos del HTML
       const productName = document.getElementById('product-name')?.value;
       const keyBenefit = document.getElementById('key-benefit')?.value;
       const bgOption = document.getElementById('bg-option')?.value || 'Estudio profesional minimalista';
+      const imageInput = document.getElementById('user-image');
+      const userFile = imageInput?.files[0];
 
       if (!productName || !keyBenefit) {
         alert('Por favor completa los campos obligatorios del producto y beneficio.');
@@ -26,12 +27,20 @@ document.addEventListener('DOMContentLoaded', () => {
       submitButton.disabled = true;
 
       try {
+        // Usamos FormData para enviar textos y opcionalmente el archivo de imagen
+        const formData = new FormData();
+        formData.append('productName', productName);
+        formData.append('keyBenefit', keyBenefit);
+        formData.append('bgOption', bgOption);
+        
+        if (userFile) {
+          formData.append('userImage', userFile);
+        }
+
         const response = await fetch('/api/generate', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ productName, keyBenefit, bgOption }),
+          // Nota: No incluyas 'Content-Type': 'application/json' cuando usas FormData; el navegador lo configura solo con el boundary.
+          body: formData,
         });
 
         const data = await response.json();
@@ -40,18 +49,14 @@ document.addEventListener('DOMContentLoaded', () => {
           throw new Error(data.error || 'Error al conectar con el servidor');
         }
 
-        // Mostrar textos generados
         if (instagramOutput) instagramOutput.textContent = data.instagram_copy;
         if (tiktokOutput) tiktokOutput.textContent = data.tiktok_copy;
         if (hashtagsOutput) hashtagsOutput.textContent = data.hashtags;
 
-        // Mostrar la imagen generada y ocultar el placeholder
         if (imageElement && data.image_url) {
           imageElement.src = data.image_url;
           imageElement.style.display = 'block';
-          if (imagePlaceholder) {
-            imagePlaceholder.style.display = 'none';
-          }
+          if (imagePlaceholder) imagePlaceholder.style.display = 'none';
         }
 
       } catch (error) {

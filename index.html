@@ -19,7 +19,7 @@
     </div>
   </header>
 
-  <!-- Main Container (Grid de 2 columnas en pantallas medianas/grandes) -->
+  <!-- Main Container -->
   <main class="max-w-7xl mx-auto w-full p-6 grid grid-cols-1 lg:grid-cols-12 gap-8 my-6">
     
     <!-- Columna Izquierda: Formulario de Entrada (5 columnas) -->
@@ -67,6 +67,17 @@
               <option value="Fondo urbano elegante de ciudad">Fondo urbano elegante</option>
             </select>
           </div>
+
+          <!-- Cargar imagen propia (Opcional) -->
+          <div>
+            <label for="user-image" class="block text-sm font-medium text-slate-400 mb-1.5">Subir Imagen Propia (Opcional):</label>
+            <input 
+              type="file" 
+              id="user-image" 
+              accept="image/*"
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20 transition-colors cursor-pointer"
+            >
+          </div>
         </form>
       </div>
 
@@ -111,18 +122,18 @@
             </div>
           </div>
 
-          <!-- Imagen Generada -->
+          <!-- Imagen Generada / Subida -->
           <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800/80 rounded-xl p-4 relative min-h-[280px]">
-            <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider absolute top-4 left-4">🎨 Imagen de IA</span>
+            <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider absolute top-4 left-4">🎨 Visual del Producto</span>
             
             <div class="w-full h-full flex items-center justify-center mt-6">
               <img 
                 id="imagen-resultado" 
-                alt="Vista previa de imagen generada" 
+                alt="Vista previa de imagen" 
                 class="max-w-full max-h-[300px] rounded-lg shadow-md object-cover hidden"
               />
               <div id="image-placeholder" class="text-slate-600 text-sm text-center p-6 border border-dashed border-slate-800 rounded-lg w-full h-48 flex items-center justify-center">
-                La imagen generada aparecerá aquí
+                La imagen generada o subida aparecerá aquí
               </div>
             </div>
           </div>
