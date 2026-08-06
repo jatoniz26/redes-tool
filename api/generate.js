@@ -60,8 +60,9 @@ export default async function handler(req, res) {
       contents[0].parts.push(imagePart);
     }
 
+    // Usamos la versión estable y estándar: gemini-1.5-flash
     const textApiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,7 +73,7 @@ export default async function handler(req, res) {
     if (!textApiResponse.ok) {
       const errorText = await textApiResponse.text();
       console.error('Error de la API de Gemini:', errorText);
-      return res.status(500).json({ error: 'Error de conexión con Gemini. Revisa los logs.' });
+      return res.status(500).json({ error: 'Error de conexión con Gemini. Revisa los logs en Vercel.' });
     }
 
     const textData = await textApiResponse.json();
