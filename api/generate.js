@@ -14,12 +14,12 @@ export default async function handler(req, res) {
       Actúa como un experto en marketing digital. Crea contenidos altamente atractivos para redes sociales.
       Producto: "${productName}"
       Beneficio principal: "${keyBenefit}"
-      Entorno/Fondo visual deseado: "${bgOption || 'Estudio profesional'}"
+      Entorno/Fondo visual deseado: "${bgOption || 'Fondo Escritorio'}"
       
       Devuelve la respuesta estrictamente en este formato JSON puro, sin bloques de código markdown ni explicaciones adicionales:
       {
         "instagram_copy": "Un texto persuasivo y comercial para Instagram, usando emojis atractivos, estructura en párrafos y una llamada a la acción.",
-        "tiktok_copy": "Un guion o texto dinámico y corto para TikTok, muy moderno, con ganchos iniciales y emojis.",
+        "tiktok_copy": "Un guion o trady dinámico y corto para TikTok, muy moderno, con ganchos iniciales y emojis.",
         "hashtags": "#hashtag1 #hashtag2 #hashtag3 #hashtag4 #hashtag5"
       }
     `;
@@ -50,7 +50,9 @@ export default async function handler(req, res) {
     const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const generatedContent = JSON.parse(cleanedText);
 
-    const visualPrompt = encodeURIComponent(`Professional product photography, ${productName}, ${bgOption || 'studio background'}, high quality, commercial lighting`);
+    // Prompt visual optimizado para Instagram: Enfoca claramente el producto y aplica un entorno estético comercial
+    const visualDescription = `Commercial product photography of a ${productName}, prominently featured in the foreground, highly detailed, professional studio lighting, placed inside a aesthetic ${bgOption}, photorealistic, social media style, high quality`;
+    const visualPrompt = encodeURIComponent(visualDescription);
     const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=1080&height=1080&nologo=true`;
 
     return res.status(200).json({
