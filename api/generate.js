@@ -10,7 +10,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Faltan datos obligatorios' });
     }
 
-    // Prompt enriquecido con tono comercial, emojis y estructura clara
     const promptTexto = `
       Actúa como un experto en marketing digital. Crea contenidos altamente atractivos para redes sociales.
       Producto: "${productName}"
@@ -25,8 +24,9 @@ export default async function handler(req, res) {
       }
     `;
 
+    // Usamos gemini-pro para garantizar compatibilidad total en v1beta
     const textApiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -48,11 +48,9 @@ export default async function handler(req, res) {
     const textData = await textApiResponse.json();
     const rawText = textData.candidates[0].content.parts[0].text;
     
-    // Limpieza por si la IA devuelve bloques de código markdown por error
     const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const generatedContent = JSON.parse(cleanedText);
 
-    // Placeholder visual mientras integramos la generación de imagen por IA
     const imageUrl = "https://via.placeholder.com/600x600?text=Fondo+IA+Generado"; 
 
     return res.status(200).json({
