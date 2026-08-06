@@ -1,45 +1,66 @@
+import formidable from 'formidable';
+import fs from 'fs';
+
+export const config = {
+  api: {
+    bodyParser: false, // Desactivar parser para recibir archivos binarios con formidable
+  },
+};
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
   try {
-    const { productName, keyBenefit, bgOption, imageBase64, mimeType } = req.body;
+    const form = formidable({});
+    
+    const [fields, files] = await new Promise((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) reject(err);
+        else resolve([fields, files]);
+      });
+    });
+
+    const productName = fields.productName ? fields.productName[0] : '';
+    const keyBenefit = fields.keyBenefit ? fields.keyBenefit[0] : '';
+    const bgOption = fields.bgOption ? fields.bgOption[0] : 'Fondo Escritorio';
+    const imageFile = files.productImage ? files.productImage[0] : null;
 
     if (!productName || !keyBenefit) {
-      return res.status(400).json({ error: 'Faltan datos obligatorios (productName o keyBenefit)' });
+      return res.status(400).json({ error: 'Faltan datos obligatorios del producto.' });
     }
 
-    const contents = [];
-    
-    let textPrompt = `
-      Actúa como un experto en marketing digital y fotografía comercial de productos.
-      Producto impreso en 3D: "${productName}"
-      Beneficio principal: "${keyBenefit}"
-      Entorno visual de venta seleccionado: "${bgOption || 'Fondo Escritorio'}"
+    let imagePart = null;
+    if (imageFile) {
+      const fileBuffer = fs.readFileSync(imageFile.filepath);
+      imagePart = {
+        inlineData: {
+          data: fileBuffer.toString('base64'),
+          mimeType: imageFile.mimetype || 'image/jpeg'
+        }
+      };
+    }
+
+    const promptTexto = `
+      Actúa como un experto en marketing digital y fotografía comercial.
+      Analiza la imagen adjunta de este producto impreso en 3D ("${productName}") y su beneficio ("${keyBenefit}").
+      Entorno visual seleccionado: "${bgOption}".
       
-      Devuelve la respuesta estrictamente en este formato JSON puro, sin bloques de código markdown ni explicaciones adicionales:
+      Devuelve la respuesta estrictamente en este formato JSON puro, sin bloques de código markdown ni texto adicional:
       {
-        "instagram_copy": "Un texto persuasivo y comercial para Instagram adaptado específicamente a las características visuales del producto, usando emojis atractivos, estructura en párrafos y llamada a la acción.",
-        "tiktok_copy": "Un guion dinámico y corto para TikTok, muy moderno, con ganchos iniciales y emojis.",
-        "hashtags": "#hashtag1 #hashtag2 #hashtag3 #hashtag4 #hashtag5"
+        "instagram_copy": "Un texto persuasivo y comercial para Instagram basado en las características reales de la foto del producto, emojis, párrafos y llamada a la acción.",
+        "tiktok_copy": "Un guion dinámico y corto para TikTok adaptado al producto, con ganchos iniciales.",
+        "hashtags": "#hashtag1 #hashtag2 #hashtag3 #hashtag4 #hashtag5",
+        "visual_prompt": "A detailed commercial macro close-up product photography background, clean flat surface in the foreground with empty space for product placement, inside a modern aesthetic environment matching ${bgOption}, studio lighting, photorealistic, 8k resolution, shallow depth of field"
       }
     `;
 
-    const parts = [{ text: textPrompt }];
-
-    if (imageBase64 && mimeType) {
-      parts.push({
-        inlineData: {
-          mimeType: mimeType,
-          data: imageBase64
-        }
-      });
+    const contents = [{ parts: [{ text: promptTexto }] }];
+    if (imagePart) {
+      contents[0].parts.push(imagePart);
     }
 
-    contents.push({ parts });
-
-    // Actualizado al modelo activo gemini-3.6-flash
     const textApiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
@@ -57,20 +78,10 @@ export default async function handler(req, res) {
 
     const textData = await textApiResponse.json();
     const rawText = textData.candidates[0].content.parts[0].text;
-    
     const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const generatedContent = JSON.parse(cleanedText);
 
-    let environmentDescription = "close-up macro shot of a clean flat surface, empty space in the foreground";
-    if (bgOption === 'Fondo Oficina') environmentDescription = "close-up macro shot of a clean executive office desk surface, empty foreground, blurred office background";
-    else if (bgOption === 'Fondo Escritorio') environmentDescription = "close-up macro view of a minimalist aesthetic desk surface, completely empty foreground ready for product placement";
-    else if (bgOption === 'Fondo cocina') environmentDescription = "close-up macro shot on a clean marble kitchen countertop surface, empty foreground space";
-    else if (bgOption === 'Fondo exterior ciudad') environmentDescription = "close-up macro view of a sleek outdoor table surface, empty foreground, urban bokeh background";
-    else if (bgOption === 'Fondo exterior parque') environmentDescription = "close-up macro view of a clean wooden garden bench surface, empty foreground, natural sunlight";
-    else if (bgOption === 'Fondo escritorio de trabajo y PC') environmentDescription = "close-up macro view of a clean desk mat surface next to a keyboard, empty space in the foreground";
-
-    const visualPrompt = encodeURIComponent(`Professional macro close-up product photography background, ${environmentDescription}, high-end commercial advertising style for Instagram, photorealistic, 8k resolution, shallow depth of field, strictly NO objects or items taking up the foreground space, completely empty flat surface ready for product placement`);
-    
+    const visualPrompt = encodeURIComponent(generatedContent.visual_prompt || `Professional macro close-up product photography background for ${productName}`);
     const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=1080&height=1080&nologo=true&enhance=true`;
 
     return res.status(200).json({

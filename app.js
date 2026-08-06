@@ -23,40 +23,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const originalText = submitButton.textContent;
-      submitButton.textContent = 'Analizando producto y generando...';
+      submitButton.textContent = 'Analizando tu producto 3D...';
       submitButton.disabled = true;
 
       try {
-        let imageBase64 = null;
-        let mimeType = null;
-
-        // Si el usuario subió foto, la convertimos a Base64 de forma limpia en el cliente
+        const formData = new FormData();
+        formData.append('productName', productName);
+        formData.append('keyBenefit', keyBenefit);
+        formData.append('bgOption', bgOption);
+        
         if (productFile) {
-          imageBase64 = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              // Extraer solo la parte base64 (removiendo el prefijo data:image/...;base64,)
-              const base64String = reader.result.split(',')[1];
-              resolve(base64String);
-            };
-            reader.onerror = error => reject(error);
-            reader.readAsDataURL(productFile);
-          });
-          mimeType = productFile.type;
+          formData.append('productImage', productFile);
         }
 
         const response = await fetch('/api/generate', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            productName, 
-            keyBenefit, 
-            bgOption, 
-            imageBase64, 
-            mimeType 
-          }),
+          body: formData,
         });
 
         const data = await response.json();

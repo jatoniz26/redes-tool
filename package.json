@@ -2,5 +2,7 @@
   "name": "redes-tool",
   "version": "1.0.0",
   "type": "module",
-  "dependencies": {}
+  "dependencies": {
+    "formidable": "^3.5.4"
+  }
 }
