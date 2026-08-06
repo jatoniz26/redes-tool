@@ -1,20 +1,39 @@
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
   try {
-    const { productName, keyBenefit, bgOption } = req.body;
+    const chunks = [];
+    for await (const chunk of req) {
+      chunks.push(chunk);
+    }
+    const buffer = Buffer.concat(chunks);
+    const bodyStr = buffer.toString('utf8');
+    
+    const getVal = (key) => {
+      const match = bodyStr.match(new RegExp(`name="${key}"[\\s\\S]*?\\r\\n\\r\\n([\\s\\S]*?)\\r\\n`));
+      return match ? match[1].trim() : '';
+    };
+
+    const productName = getVal('productName');
+    const keyBenefit = getVal('keyBenefit');
+    const bgOption = getVal('bgOption') || 'Fondo Escritorio';
 
     if (!productName || !keyBenefit) {
-      return res.status(400).json({ error: 'Faltan datos obligatorios' });
+      return res.status(400).json({ error: 'Faltan datos obligatorios del producto' });
     }
 
     const promptTexto = `
       Actúa como un experto en marketing digital. Crea contenidos altamente atractivos para redes sociales.
       Producto: "${productName}"
       Beneficio principal: "${keyBenefit}"
-      Entorno visual de venta: "${bgOption || 'Fondo Escritorio'}"
       
       Devuelve la respuesta estrictamente en este formato JSON puro, sin bloques de código markdown ni explicaciones adicionales:
       {
@@ -39,28 +58,23 @@ export default async function handler(req, res) {
     );
 
     if (!textApiResponse.ok) {
-      const errorDetails = await textApiResponse.text();
-      console.error('Error de Gemini:', errorDetails);
       throw new Error('Fallo al conectar con la API de Gemini');
     }
 
     const textData = await textApiResponse.json();
     const rawText = textData.candidates[0].content.parts[0].text;
-    
     const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const generatedContent = JSON.parse(cleanedText);
 
-    // Mapeo detallado de entornos enfocados en primer plano y detalle del producto
-    let environmentDescription = "on a clean wooden desk surface, macro photography, close-up";
-    if (bgOption === 'Fondo Oficina') environmentDescription = "placed on a sleek executive desk inside a modern corporate office, close-up shot, blurred background";
-    else if (bgOption === 'Fondo Escritorio') environmentDescription = "placed prominently in the foreground on a clean minimalist aesthetic desk setup, close-up view";
-    else if (bgOption === 'Fondo cocina') environmentDescription = "placed on a luxury marble kitchen countertop, close-up product shot, warm ambient lighting";
-    else if (bgOption === 'Fondo exterior ciudad') environmentDescription = "placed on an outdoor cafe table with a blurred urban city background during golden hour, close-up";
-    else if (bgOption === 'Fondo exterior parque') environmentDescription = "placed outdoors on a wooden bench surrounded by nature and soft natural sunlight, close-up shot";
-    else if (bgOption === 'Fondo escritorio de trabajo y PC') environmentDescription = "placed right next to a modern laptop and keyboard on a desk setup, close-up focus on the product";
+    let environmentDescription = "modern minimalist aesthetic workspace";
+    if (bgOption === 'Fondo Oficina') environmentDescription = "modern corporate office interior with soft natural lighting";
+    else if (bgOption === 'Fondo Escritorio') environmentDescription = "clean minimalist desk setup, aesthetic workspace";
+    else if (bgOption === 'Fondo cocina') environmentDescription = "luxurious modern kitchen interior, warm ambient lighting";
+    else if (bgOption === 'Fondo exterior ciudad') environmentDescription = "stylish urban city background during golden hour";
+    else if (bgOption === 'Fondo exterior parque') environmentDescription = "lush green park with natural sunlight";
+    else if (bgOption === 'Fondo escritorio de trabajo y PC') environmentDescription = "modern programmer desk setup with laptop and keyboard";
 
-    // Prompt visual forzado para mantener el producto en primer plano absoluto
-    const visualPrompt = encodeURIComponent(`Close-up macro commercial product photography of ${productName}, sharp focus on the object, ${environmentDescription}, high-end advertising style for Instagram, photorealistic, 8k resolution, shallow depth of field`);
+    const visualPrompt = encodeURIComponent(`Professional product photography of ${productName}, commercial advertising for Instagram in a ${environmentDescription}, photorealistic, 8k resolution`);
     const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=1080&height=1080&nologo=true`;
 
     return res.status(200).json({
@@ -72,6 +86,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Error en el servidor:', error);
-    return res.status(500).json({ error: 'Ocurrió un error generando el contenido: ' + error.message });
+    return res.status(500).json({ error: 'Ocurrió un error en el servidor: ' + error.message });
   }
 }

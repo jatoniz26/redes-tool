@@ -29,28 +29,31 @@
         </h2>
         
         <form id="generate-form" class="space-y-5">
+          <!-- Producto -->
           <div>
             <label for="product-name" class="block text-sm font-medium text-slate-400 mb-1.5">Nombre del Producto:</label>
             <input 
               type="text" 
               id="product-name" 
-              placeholder="Ej. Matera geométrica minimalista" 
+              placeholder="Ej. Matera geométrica acolchada" 
               class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition-colors"
               required
             >
           </div>
 
+          <!-- Beneficio Principal -->
           <div>
             <label for="key-benefit" class="block text-sm font-medium text-slate-400 mb-1.5">Beneficio Principal:</label>
             <textarea 
               id="key-benefit" 
               rows="3" 
-              placeholder="Ej. Añade vida y diseño moderno a espacios de trabajo pequeños." 
+              placeholder="Ej. Diseño moderno y exclusivo para espacios de trabajo." 
               class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition-colors resize-none"
               required
             ></textarea>
           </div>
 
+          <!-- Entorno Visual -->
           <div>
             <label for="bg-option" class="block text-sm font-medium text-slate-400 mb-1.5">Entorno Comercial (Instagram):</label>
             <select 
@@ -66,19 +69,21 @@
             </select>
           </div>
 
-          <!-- Subir foto del producto en fondo blanco -->
+          <!-- Subir foto del producto -->
           <div>
-            <label for="product-image" class="block text-sm font-medium text-slate-400 mb-1.5">Foto del Producto (Fondo Blanco):</label>
+            <label for="product-image" class="block text-sm font-medium text-slate-400 mb-1.5">Foto Real del Producto (Fondo Blanco):</label>
             <input 
               type="file" 
               id="product-image" 
               accept="image/*"
               class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20 transition-colors cursor-pointer"
+              required
             >
           </div>
         </form>
       </div>
 
+      <!-- Botón de Acción -->
       <div class="mt-8">
         <button 
           type="button" 
@@ -90,7 +95,7 @@
       </div>
     </section>
 
-    <!-- Columna Derecha: Resultados -->
+    <!-- Columna Derecha: Resultados y Visualización -->
     <section class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
       <div>
         <h2 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
@@ -98,6 +103,7 @@
         </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Textos de Redes -->
           <div class="space-y-4">
             <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
               <span class="text-xs font-semibold text-pink-400 uppercase tracking-wider block mb-1">📸 Instagram Copy</span>
@@ -115,6 +121,7 @@
             </div>
           </div>
 
+          <!-- Imagen Generada -->
           <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800/80 rounded-xl p-4 relative min-h-[280px]">
             <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider absolute top-4 left-4">🎨 Visual del Producto</span>
             
@@ -125,7 +132,7 @@
                 class="max-w-full max-h-[300px] rounded-lg shadow-md object-cover hidden"
               />
               <div id="image-placeholder" class="text-slate-600 text-sm text-center p-6 border border-dashed border-slate-800 rounded-lg w-full h-48 flex items-center justify-center">
-                La imagen compuesta aparecerá aquí
+                La imagen generada aparecerá aquí
               </div>
             </div>
           </div>
@@ -135,6 +142,7 @@
 
   </main>
 
+  <!-- Footer -->
   <footer class="text-center py-6 text-xs text-slate-600 border-t border-slate-900">
     Desarrollado para automatización de marketing y redes sociales.
   </footer>
