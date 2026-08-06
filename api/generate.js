@@ -50,16 +50,20 @@ export default async function handler(req, res) {
     const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const generatedContent = JSON.parse(cleanedText);
 
-    let environmentDescription = "modern professional setting";
-    if (bgOption === 'Fondo Oficina') environmentDescription = "modern corporate office interior with soft natural lighting";
-    else if (bgOption === 'Fondo Escritorio') environmentDescription = "clean minimalist desk setup, aesthetic workspace";
-    else if (bgOption === 'Fondo cocina') environmentDescription = "luxurious modern kitchen interior, warm ambient lighting";
-    else if (bgOption === 'Fondo exterior ciudad') environmentDescription = "stylish urban city background during golden hour";
-    else if (bgOption === 'Fondo exterior parque') environmentDescription = "lush green park with natural sunlight and bokeh background";
-    else if (bgOption === 'Fondo escritorio de trabajo y PC') environmentDescription = "modern programmer desk setup with laptop, mechanical keyboard, aesthetic deskmat";
+    // Mapeo detallado enfocado 100% en primeros planos (macro / closeup)
+    let environmentDescription = "macro photography close-up shot on a clean surface";
+    if (bgOption === 'Fondo Oficina') environmentDescription = "macro close-up shot placed prominently on a clean modern executive office desk, blurred corporate background";
+    else if (bgOption === 'Fondo Escritorio') environmentDescription = "macro close-up product photography, placed right in the foreground on a minimalist aesthetic desk setup";
+    else if (bgOption === 'Fondo cocina') environmentDescription = "macro close-up shot on a luxury clean marble kitchen countertop, shallow depth of field";
+    else if (bgOption === 'Fondo exterior ciudad') environmentDescription = "macro close-up product view on a sleek outdoor table, urban city background softly blurred";
+    else if (bgOption === 'Fondo exterior parque') environmentDescription = "macro close-up nature photography, placed on a clean wooden surface outdoors, lush green bokeh background";
+    else if (bgOption === 'Fondo escritorio de trabajo y PC') environmentDescription = "macro close-up product shot next to modern work gear, sharp focus on the item, blurred tech background";
 
-    const visualPrompt = encodeURIComponent(`Professional commercial product photography of ${productName}, perfectly integrated into a ${environmentDescription}, high-end commercial advertising for Instagram, photorealistic, 8k resolution`);
-    const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=1080&height=1080&nologo=true`;
+    // Prompt visual optimizado para máxima nitidez, primer plano y detalle comercial de alta gama
+    const visualPrompt = encodeURIComponent(`Extreme close-up macro product photography of ${productName}, sharp crisp focus on the item details, ${environmentDescription}, highly detailed textures, studio commercial lighting, Instagram aesthetic, 8k resolution, photorealistic, masterpiece`);
+    
+    // Forzamos parámetros de alta calidad en la URL (nologo y mejor renderizado)
+    const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=1080&height=1080&nologo=true&enhance=true`;
 
     return res.status(200).json({
       instagram_copy: generatedContent.instagram_copy,
