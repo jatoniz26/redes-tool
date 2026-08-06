@@ -10,7 +10,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Faltan datos obligatorios (productName o keyBenefit)' });
     }
 
-    // Preparamos los contenidos para Gemini (Soporte Multimodal si envías foto)
     const contents = [];
     
     let textPrompt = `
@@ -29,7 +28,6 @@ export default async function handler(req, res) {
 
     const parts = [{ text: textPrompt }];
 
-    // Si el usuario subió una foto, se la adjuntamos a Gemini para que la "vea" y adapte los copys
     if (imageBase64 && mimeType) {
       parts.push({
         inlineData: {
@@ -41,9 +39,9 @@ export default async function handler(req, res) {
 
     contents.push({ parts });
 
-    // Llamada a la API de Gemini (usando gemini-2.5-flash o 1.5-flash que soportan visión de manera nativa)
+    // Actualizado al modelo activo gemini-3.6-flash
     const textApiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,7 +61,6 @@ export default async function handler(req, res) {
     const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const generatedContent = JSON.parse(cleanedText);
 
-    // Mapeo detallado enfocado en planos cercanos (macro closeup) limpios para colocar tu producto real
     let environmentDescription = "close-up macro shot of a clean flat surface, empty space in the foreground";
     if (bgOption === 'Fondo Oficina') environmentDescription = "close-up macro shot of a clean executive office desk surface, empty foreground, blurred office background";
     else if (bgOption === 'Fondo Escritorio') environmentDescription = "close-up macro view of a minimalist aesthetic desk surface, completely empty foreground ready for product placement";
