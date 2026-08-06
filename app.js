@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
       submitButton.disabled = true;
 
       try {
-        // Usamos FormData para enviar textos y opcionalmente el archivo de imagen
         const formData = new FormData();
         formData.append('productName', productName);
         formData.append('keyBenefit', keyBenefit);
@@ -39,8 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const response = await fetch('/api/generate', {
           method: 'POST',
-          // Nota: No incluyas 'Content-Type': 'application/json' cuando usas FormData; el navegador lo configura solo con el boundary.
-          body: formData,
+          body: formData, // Importante: Sin cabecera Content-Type manual para que el navegador asigne el boundary correcto de multipart
         });
 
         const data = await response.json();

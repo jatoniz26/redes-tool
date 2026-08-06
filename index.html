@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Generador de Contenido para Redes Sociales</title>
-  <!-- Tailwind CSS para un diseño rápido, limpio y responsivo -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-cyan-500 selection:text-white">
@@ -22,7 +21,7 @@
   <!-- Main Container -->
   <main class="max-w-7xl mx-auto w-full p-6 grid grid-cols-1 lg:grid-cols-12 gap-8 my-6">
     
-    <!-- Columna Izquierda: Formulario de Entrada (5 columnas) -->
+    <!-- Columna Izquierda: Formulario -->
     <section class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
       <div>
         <h2 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
@@ -30,7 +29,6 @@
         </h2>
         
         <form id="generate-form" class="space-y-5">
-          <!-- Producto -->
           <div>
             <label for="product-name" class="block text-sm font-medium text-slate-400 mb-1.5">Nombre del Producto:</label>
             <input 
@@ -42,7 +40,6 @@
             >
           </div>
 
-          <!-- Beneficio Principal -->
           <div>
             <label for="key-benefit" class="block text-sm font-medium text-slate-400 mb-1.5">Beneficio Principal:</label>
             <textarea 
@@ -54,7 +51,6 @@
             ></textarea>
           </div>
 
-          <!-- Opciones de Fondo Visual -->
           <div>
             <label for="bg-option" class="block text-sm font-medium text-slate-400 mb-1.5">Entorno Visual (IA):</label>
             <select 
@@ -68,7 +64,6 @@
             </select>
           </div>
 
-          <!-- Cargar imagen propia (Opcional) -->
           <div>
             <label for="user-image" class="block text-sm font-medium text-slate-400 mb-1.5">Subir Imagen Propia (Opcional):</label>
             <input 
@@ -81,7 +76,6 @@
         </form>
       </div>
 
-      <!-- Botón de Acción -->
       <div class="mt-8">
         <button 
           type="button" 
@@ -93,7 +87,7 @@
       </div>
     </section>
 
-    <!-- Columna Derecha: Resultados y Visualización (7 columnas) -->
+    <!-- Columna Derecha: Resultados -->
     <section class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
       <div>
         <h2 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
@@ -101,28 +95,23 @@
         </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Copys de Redes -->
           <div class="space-y-4">
-            <!-- Instagram Box -->
             <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
               <span class="text-xs font-semibold text-pink-400 uppercase tracking-wider block mb-1">📸 Instagram Copy</span>
               <p id="instagram-output" class="text-sm text-slate-300 whitespace-pre-wrap min-h-[70px]">Aquí aparecerá el texto persuasivo para Instagram...</p>
             </div>
 
-            <!-- TikTok Box -->
             <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
               <span class="text-xs font-semibold text-cyan-400 uppercase tracking-wider block mb-1">🎬 TikTok Script</span>
               <p id="tiktok-output" class="text-sm text-slate-300 whitespace-pre-wrap min-h-[70px]">Aquí aparecerá el guion dinámico para TikTok...</p>
             </div>
 
-            <!-- Hashtags Box -->
             <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
               <span class="text-xs font-semibold text-indigo-400 uppercase tracking-wider block mb-1">🏷️ Hashtags</span>
               <p id="hashtags-output" class="text-xs text-indigo-300/90 font-mono">#hashtags</p>
             </div>
           </div>
 
-          <!-- Imagen Generada / Subida -->
           <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800/80 rounded-xl p-4 relative min-h-[280px]">
             <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider absolute top-4 left-4">🎨 Visual del Producto</span>
             
@@ -143,12 +132,10 @@
 
   </main>
 
-  <!-- Footer -->
   <footer class="text-center py-6 text-xs text-slate-600 border-t border-slate-900">
     Desarrollado para automatización de marketing y redes sociales.
   </footer>
 
-  <!-- Script Principal -->
   <script src="app.js"></script>
 </body>
 </html>
