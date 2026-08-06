@@ -60,8 +60,9 @@ export default async function handler(req, res) {
       contents[0].parts.push(imagePart);
     }
 
+    // ACTUALIZACIÓN CLAVE: Uso del modelo actual gemini-2.5-flash
     const textApiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -70,19 +71,43 @@ export default async function handler(req, res) {
     );
 
     if (!textApiResponse.ok) {
-      const errorDetails = await textApiResponse.text();
-      console.error('Error de Gemini:', errorDetails);
-      throw new Error('Fallo al conectar con la API de Gemini');
+      const errorText = await textApiResponse.text();
+      console.error('Error de la API de Gemini:', errorText);
+      return res.status(500).json({ error: 'Error de conexión con Gemini. Revisa los logs.' });
     }
 
     const textData = await textApiResponse.json();
-    const rawText = textData.candidates[0].content.parts[0].text;
-    const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-    const generatedContent = JSON.parse(cleanedText);
-
-    const visualPrompt = encodeURIComponent(`Professional macro interior photography of an empty ${bgOption}. The entire center and foreground are completely clear, vacant, and empty. Architectural shot, clean lines, minimalist, cinematic lighting, photorealistic, 8k, bokeh, no objects, no boxes, no shapes in the center, negative space.`);
+    const rawText = textData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
     
-    const randomSeed = Math.floor(Math.random() * 10000);
+    let generatedContent;
+    try {
+      const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+      generatedContent = JSON.parse(cleanedText);
+    } catch (e) {
+      console.error('Error al convertir la respuesta de Gemini a JSON:', rawText);
+      generatedContent = {
+        instagram_copy: "¡Lleva la organización y el diseño de tu espacio al siguiente nivel! Descubre la funcionalidad que te faltaba. 🚀",
+        tiktok_copy: "POV: Encontraste la pieza perfecta para tu setup. 👇",
+        hashtags: "#TonizLab3D #Impresion3D #DiseñoFuncional"
+      };
+    }
+
+    // Mapeo preciso de texturas
+    const surfaceMap = {
+      'Fondo Escritorio': 'clean wooden desk surface',
+      'Fondo Oficina': 'sleek executive office desk surface',
+      'Fondo cocina': 'smooth marble kitchen countertop',
+      'Fondo exterior ciudad': 'modern outdoor cafe table surface',
+      'Fondo exterior parque': 'wooden picnic table surface in a park',
+      'Fondo escritorio de trabajo y PC': 'clean desk mat surface near a blurred keyboard'
+    };
+    
+    const selectedSurface = surfaceMap[bgOption] || 'clean flat table surface';
+
+    // Generación visual que fuerza un plano macro (close-up) de la mesa, sin espacio para dibujar habitaciones vacías
+    const visualPrompt = encodeURIComponent(`Macro close-up photography of an empty ${selectedSurface}. The flat surface occupies the entire foreground and is completely blank and empty. Blurred background. Depth of field, bokeh, product photography style, strictly NO objects on the table, 8k resolution, highly detailed.`);
+    
+    const randomSeed = Math.floor(Math.random() * 100000);
     const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=1080&height=1080&nologo=true&enhance=true&seed=${randomSeed}`;
 
     return res.status(200).json({
@@ -93,7 +118,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('Error en el servidor:', error);
-    return res.status(500).json({ error: 'Ocurrió un error en el servidor: ' + error.message });
+    console.error('Error general en el servidor:', error);
+    return res.status(500).json({ error: 'Error interno del servidor: ' + error.message });
   }
 }
