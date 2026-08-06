@@ -4,37 +4,50 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { productName, keyBenefit, bgOption } = req.body;
+    const { productName, keyBenefit, bgOption, imageBase64, mimeType } = req.body;
 
     if (!productName || !keyBenefit) {
       return res.status(400).json({ error: 'Faltan datos obligatorios (productName o keyBenefit)' });
     }
 
-    const promptTexto = `
-      Actúa como un experto en marketing digital. Crea contenidos altamente atractivos para redes sociales.
-      Producto: "${productName}"
+    // Preparamos los contenidos para Gemini (Soporte Multimodal si envías foto)
+    const contents = [];
+    
+    let textPrompt = `
+      Actúa como un experto en marketing digital y fotografía comercial de productos.
+      Producto impreso en 3D: "${productName}"
       Beneficio principal: "${keyBenefit}"
-      Entorno visual de venta: "${bgOption || 'Fondo Escritorio'}"
+      Entorno visual de venta seleccionado: "${bgOption || 'Fondo Escritorio'}"
       
       Devuelve la respuesta estrictamente en este formato JSON puro, sin bloques de código markdown ni explicaciones adicionales:
       {
-        "instagram_copy": "Un texto persuasivo y comercial para Instagram, usando emojis atractivos, estructura en párrafos y una llamada a la acción.",
-        "tiktok_copy": "Un guion o texto dinámico y corto para TikTok, muy moderno, con ganchos iniciales y emojis.",
+        "instagram_copy": "Un texto persuasivo y comercial para Instagram adaptado específicamente a las características visuales del producto, usando emojis atractivos, estructura en párrafos y llamada a la acción.",
+        "tiktok_copy": "Un guion dinámico y corto para TikTok, muy moderno, con ganchos iniciales y emojis.",
         "hashtags": "#hashtag1 #hashtag2 #hashtag3 #hashtag4 #hashtag5"
       }
     `;
 
+    const parts = [{ text: textPrompt }];
+
+    // Si el usuario subió una foto, se la adjuntamos a Gemini para que la "vea" y adapte los copys
+    if (imageBase64 && mimeType) {
+      parts.push({
+        inlineData: {
+          mimeType: mimeType,
+          data: imageBase64
+        }
+      });
+    }
+
+    contents.push({ parts });
+
+    // Llamada a la API de Gemini (usando gemini-2.5-flash o 1.5-flash que soportan visión de manera nativa)
     const textApiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptTexto }] }],
-          generationConfig: {
-            responseMimeType: 'application/json'
-          }
-        })
+        body: JSON.stringify({ contents })
       }
     );
 
@@ -50,17 +63,16 @@ export default async function handler(req, res) {
     const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const generatedContent = JSON.parse(cleanedText);
 
-    // Mapeo enfocado estrictamente en un entorno vacío con espacio libre en primer plano para colocar tu impresión 3D
-    let environmentDescription = "empty clean surface, empty space in the foreground for product placement";
-    if (bgOption === 'Fondo Oficina') environmentDescription = "modern corporate office desk, completely empty surface in the foreground, blurred office interior background";
-    else if (bgOption === 'Fondo Escritorio') environmentDescription = "clean minimalist aesthetic desk setup, empty wooden surface in the foreground ready for an object";
-    else if (bgOption === 'Fondo cocina') environmentDescription = "luxurious modern white marble kitchen countertop, completely empty foreground space, warm ambient lighting";
-    else if (bgOption === 'Fondo exterior ciudad') environmentDescription = "stylish outdoor table surface, empty foreground, urban city background during golden hour with soft bokeh";
-    else if (bgOption === 'Fondo exterior parque') environmentDescription = "clean outdoor wooden bench surface, empty foreground, lush green park background with natural sunlight";
-    else if (bgOption === 'Fondo escritorio de trabajo y PC') environmentDescription = "modern programmer desk setup with laptop and keyboard in the background, leaving a clean empty space in the foreground";
+    // Mapeo detallado enfocado en planos cercanos (macro closeup) limpios para colocar tu producto real
+    let environmentDescription = "close-up macro shot of a clean flat surface, empty space in the foreground";
+    if (bgOption === 'Fondo Oficina') environmentDescription = "close-up macro shot of a clean executive office desk surface, empty foreground, blurred office background";
+    else if (bgOption === 'Fondo Escritorio') environmentDescription = "close-up macro view of a minimalist aesthetic desk surface, completely empty foreground ready for product placement";
+    else if (bgOption === 'Fondo cocina') environmentDescription = "close-up macro shot on a clean marble kitchen countertop surface, empty foreground space";
+    else if (bgOption === 'Fondo exterior ciudad') environmentDescription = "close-up macro view of a sleek outdoor table surface, empty foreground, urban bokeh background";
+    else if (bgOption === 'Fondo exterior parque') environmentDescription = "close-up macro view of a clean wooden garden bench surface, empty foreground, natural sunlight";
+    else if (bgOption === 'Fondo escritorio de trabajo y PC') environmentDescription = "close-up macro view of a clean desk mat surface next to a keyboard, empty space in the foreground";
 
-    // Prompt visual estricto para generar SOLAMENTE el fondo vacío, sin ningún objeto ni producto simulado
-    const visualPrompt = encodeURIComponent(`Professional empty commercial studio background, ${environmentDescription}, high-end advertising photography for Instagram, photorealistic, 8k resolution, cinematic lighting, NO objects in the foreground, completely empty space ready for product placement`);
+    const visualPrompt = encodeURIComponent(`Professional macro close-up product photography background, ${environmentDescription}, high-end commercial advertising style for Instagram, photorealistic, 8k resolution, shallow depth of field, strictly NO objects or items taking up the foreground space, completely empty flat surface ready for product placement`);
     
     const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=1080&height=1080&nologo=true&enhance=true`;
 
@@ -73,6 +85,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Error en el servidor:', error);
-    return res.status(500).json({ error: 'Ocurrió un error generando el contenido: ' + error.message });
+    return res.status(500).json({ error: 'Ocurrió un error en el servidor: ' + error.message });
   }
 }

@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const productName = document.getElementById('product-name')?.value;
       const keyBenefit = document.getElementById('key-benefit')?.value;
       const bgOption = document.getElementById('bg-option')?.value || 'Fondo Escritorio';
+      const imageInput = document.getElementById('product-image');
+      const productFile = imageInput?.files[0];
 
       if (!productName || !keyBenefit) {
         alert('Por favor completa los campos obligatorios del producto y beneficio.');
@@ -21,16 +23,40 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const originalText = submitButton.textContent;
-      submitButton.textContent = 'Generando contenido...';
+      submitButton.textContent = 'Analizando producto y generando...';
       submitButton.disabled = true;
 
       try {
+        let imageBase64 = null;
+        let mimeType = null;
+
+        // Si el usuario subió foto, la convertimos a Base64 de forma limpia en el cliente
+        if (productFile) {
+          imageBase64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              // Extraer solo la parte base64 (removiendo el prefijo data:image/...;base64,)
+              const base64String = reader.result.split(',')[1];
+              resolve(base64String);
+            };
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(productFile);
+          });
+          mimeType = productFile.type;
+        }
+
         const response = await fetch('/api/generate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ productName, keyBenefit, bgOption }),
+          body: JSON.stringify({ 
+            productName, 
+            keyBenefit, 
+            bgOption, 
+            imageBase64, 
+            mimeType 
+          }),
         });
 
         const data = await response.json();
