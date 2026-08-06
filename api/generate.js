@@ -1,89 +1,73 @@
 export default async function handler(req, res) {
-  // 1. Asegurar que solo aceptamos peticiones POST
+  // 1. Seguridad: Solo permitir peticiones POST desde tu formulario
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método no permitido. Usa POST.' });
+    return res.status(405).json({ error: 'Método no permitido' });
   }
 
   try {
-    // 2. Recibir los datos enviados desde tu frontend
-    const { imageBase64, bgOption, productName, keyBenefit } = req.body;
+    // 2. Extraer los datos enviados desde tu frontend
+    const { productName, keyBenefit, bgOption, image } = req.body;
 
-    if (!imageBase64) {
-      return res.status(400).json({ error: 'Falta la imagen del producto.' });
+    if (!productName || !keyBenefit) {
+      return res.status(400).json({ error: 'Faltan datos obligatorios' });
     }
 
-    // 3. LLAMADA A LA API DE IMAGEN (Ejemplo genérico para Photoroom, Replicate, etc.)
-    // Aquí enviamos la imagen en Base64 y el prompt del fondo seleccionado
-    const imageApiResponse = await fetch('URL_DE_LA_API_DE_IMAGEN', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.IMAGE_API_KEY}` // Llave guardada en Vercel
-      },
-      body: JSON.stringify({
-        image_file_b64: imageBase64,
-        background_prompt: getBackgroundPrompt(bgOption) // Función auxiliar para traducir la opción a texto
-      })
-    });
-    
-    const imageData = await imageApiResponse.json();
-    const newImageUrl = imageData.result_url; // La URL de tu nueva imagen con fondo
-
-    // 4. LLAMADA A LA API DE OPENAI PARA EL TEXTO
+    // 3. Preparar las instrucciones para Gemini
     const promptTexto = `
       Crea textos promocionales para un producto llamado "${productName}". 
       Beneficio principal: "${keyBenefit}".
       Entorno de la foto: "${bgOption}".
       
-      Devuelve la respuesta estrictamente en este formato JSON:
+      Devuelve la respuesta estrictamente en este formato JSON sin markdown, ni formato adicional, solo el objeto puro:
       {
-        "instagram_copy": "texto aquí",
-        "tiktok_copy": "texto aquí",
-        "hashtags": "#tag1 #tag2"
+        "instagram_copy": "Aquí va el texto para Instagram",
+        "tiktok_copy": "Aquí va el texto para TikTok",
+        "hashtags": "#tag1 #tag2 #tag3"
       }
     `;
 
-    const textApiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        response_format: { type: "json_object" }, // Fuerza a que devuelva un JSON limpio
-        messages: [{ role: 'user', content: promptTexto }]
-      })
-    });
+    // 4. Llamar a la API de Google Gemini
+    const textApiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptTexto }] }],
+          generationConfig: {
+            responseMimeType: 'application/json'
+          }
+        })
+      }
+    );
 
+    if (!textApiResponse.ok) {
+      const errorDetails = await textApiResponse.text();
+      console.error('Error de Gemini:', errorDetails);
+      throw new Error('Fallo al conectar con Gemini');
+    }
+
+    // 5. Procesar la respuesta de Gemini
     const textData = await textApiResponse.json();
-    const generatedContent = JSON.parse(textData.choices[0].message.content);
+    const generatedText = textData.candidates[0].content.parts[0].text;
+    const generatedContent = JSON.parse(generatedText);
 
-    // 5. RESPUESTA FINAL AL FRONTEND
-    // Devolvemos la nueva imagen y los textos ya procesados
+    // 6. Procesamiento de la Imagen
+    // NOTA: Aquí está el espacio reservado para tu API de imágenes (fal.ai, Replicate, etc.)
+    // Por ahora, devolvemos un enlace de prueba para que tu frontend no lance error
+    // y puedas probar que los textos se generan correctamente.
+    const imageUrl = "https://via.placeholder.com/600x600?text=Fondo+Generado"; 
+
+    // 7. Enviar la respuesta exitosa de vuelta a tu página web
     return res.status(200).json({
-      success: true,
-      imageUrl: newImageUrl,
-      instagram: generatedContent.instagram_copy,
-      tiktok: generatedContent.tiktok_copy,
-      hashtags: generatedContent.hashtags
+      instagram_copy: generatedContent.instagram_copy,
+      tiktok_copy: generatedContent.tiktok_copy,
+      hashtags: generatedContent.hashtags,
+      image_url: imageUrl
     });
 
   } catch (error) {
-    console.error('Error en la API:', error);
+    console.error('Error en el servidor:', error);
     return res.status(500).json({ error: 'Ocurrió un error generando el contenido.' });
   }
-}
-
-// Función auxiliar para mapear el valor del radio button a un prompt en inglés para la IA
-function getBackgroundPrompt(option) {
-  const prompts = {
-    office: "A modern corporate office background, blurred out of focus",
-    desk: "A clean wooden desk setting",
-    kitchen: "A bright, modern kitchen interior",
-    city_outdoor: "An urban city street during daytime, bokeh effect",
-    park_outdoor: "A sunny outdoor park with green grass and trees",
-    work_pc: "A workspace desk with a computer monitor in the background"
-  };
-  return prompts[option] || "A clean white studio background";
 }
