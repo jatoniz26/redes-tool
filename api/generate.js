@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     const { productName, keyBenefit, bgOption } = req.body;
 
     if (!productName || !keyBenefit) {
-      return res.status(400).json({ error: 'Faltan datos obligatorios (productName o keyBenefit)' });
+      return res.status(400).json({ error: 'Faltan datos obligatorios' });
     }
 
     const promptTexto = `
