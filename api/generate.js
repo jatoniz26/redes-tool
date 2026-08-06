@@ -1,39 +1,20 @@
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
   try {
-    const chunks = [];
-    for await (const chunk of req) {
-      chunks.push(chunk);
-    }
-    const buffer = Buffer.concat(chunks);
-    const bodyStr = buffer.toString('utf8');
-    
-    const getVal = (key) => {
-      const match = bodyStr.match(new RegExp(`name="${key}"[\\s\\S]*?\\r\\n\\r\\n([\\s\\S]*?)\\r\\n`));
-      return match ? match[1].trim() : '';
-    };
-
-    const productName = getVal('productName');
-    const keyBenefit = getVal('keyBenefit');
-    const bgOption = getVal('bgOption') || 'Fondo Escritorio';
+    const { productName, keyBenefit, bgOption } = req.body;
 
     if (!productName || !keyBenefit) {
-      return res.status(400).json({ error: 'Faltan datos obligatorios del producto' });
+      return res.status(400).json({ error: 'Faltan datos obligatorios (productName o keyBenefit)' });
     }
 
     const promptTexto = `
       Actúa como un experto en marketing digital. Crea contenidos altamente atractivos para redes sociales.
       Producto: "${productName}"
       Beneficio principal: "${keyBenefit}"
+      Entorno visual de venta: "${bgOption || 'Fondo Escritorio'}"
       
       Devuelve la respuesta estrictamente en este formato JSON puro, sin bloques de código markdown ni explicaciones adicionales:
       {
@@ -58,23 +39,26 @@ export default async function handler(req, res) {
     );
 
     if (!textApiResponse.ok) {
+      const errorDetails = await textApiResponse.text();
+      console.error('Error de Gemini:', errorDetails);
       throw new Error('Fallo al conectar con la API de Gemini');
     }
 
     const textData = await textApiResponse.json();
     const rawText = textData.candidates[0].content.parts[0].text;
+    
     const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const generatedContent = JSON.parse(cleanedText);
 
-    let environmentDescription = "modern minimalist aesthetic workspace";
+    let environmentDescription = "modern professional setting";
     if (bgOption === 'Fondo Oficina') environmentDescription = "modern corporate office interior with soft natural lighting";
     else if (bgOption === 'Fondo Escritorio') environmentDescription = "clean minimalist desk setup, aesthetic workspace";
     else if (bgOption === 'Fondo cocina') environmentDescription = "luxurious modern kitchen interior, warm ambient lighting";
     else if (bgOption === 'Fondo exterior ciudad') environmentDescription = "stylish urban city background during golden hour";
-    else if (bgOption === 'Fondo exterior parque') environmentDescription = "lush green park with natural sunlight";
-    else if (bgOption === 'Fondo escritorio de trabajo y PC') environmentDescription = "modern programmer desk setup with laptop and keyboard";
+    else if (bgOption === 'Fondo exterior parque') environmentDescription = "lush green park with natural sunlight and bokeh background";
+    else if (bgOption === 'Fondo escritorio de trabajo y PC') environmentDescription = "modern programmer desk setup with laptop, mechanical keyboard, aesthetic deskmat";
 
-    const visualPrompt = encodeURIComponent(`Professional product photography of ${productName}, commercial advertising for Instagram in a ${environmentDescription}, photorealistic, 8k resolution`);
+    const visualPrompt = encodeURIComponent(`Professional commercial product photography of ${productName}, perfectly integrated into a ${environmentDescription}, high-end commercial advertising for Instagram, photorealistic, 8k resolution`);
     const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=1080&height=1080&nologo=true`;
 
     return res.status(200).json({
@@ -86,6 +70,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Error en el servidor:', error);
-    return res.status(500).json({ error: 'Ocurrió un error en el servidor: ' + error.message });
+    return res.status(500).json({ error: 'Ocurrió un error generando el contenido: ' + error.message });
   }
 }
