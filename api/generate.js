@@ -50,19 +50,18 @@ export default async function handler(req, res) {
     const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const generatedContent = JSON.parse(cleanedText);
 
-    // Mapeo detallado enfocado 100% en primeros planos (macro / closeup)
-    let environmentDescription = "macro photography close-up shot on a clean surface";
-    if (bgOption === 'Fondo Oficina') environmentDescription = "macro close-up shot placed prominently on a clean modern executive office desk, blurred corporate background";
-    else if (bgOption === 'Fondo Escritorio') environmentDescription = "macro close-up product photography, placed right in the foreground on a minimalist aesthetic desk setup";
-    else if (bgOption === 'Fondo cocina') environmentDescription = "macro close-up shot on a luxury clean marble kitchen countertop, shallow depth of field";
-    else if (bgOption === 'Fondo exterior ciudad') environmentDescription = "macro close-up product view on a sleek outdoor table, urban city background softly blurred";
-    else if (bgOption === 'Fondo exterior parque') environmentDescription = "macro close-up nature photography, placed on a clean wooden surface outdoors, lush green bokeh background";
-    else if (bgOption === 'Fondo escritorio de trabajo y PC') environmentDescription = "macro close-up product shot next to modern work gear, sharp focus on the item, blurred tech background";
+    // Mapeo enfocado estrictamente en un entorno vacío con espacio libre en primer plano para colocar tu impresión 3D
+    let environmentDescription = "empty clean surface, empty space in the foreground for product placement";
+    if (bgOption === 'Fondo Oficina') environmentDescription = "modern corporate office desk, completely empty surface in the foreground, blurred office interior background";
+    else if (bgOption === 'Fondo Escritorio') environmentDescription = "clean minimalist aesthetic desk setup, empty wooden surface in the foreground ready for an object";
+    else if (bgOption === 'Fondo cocina') environmentDescription = "luxurious modern white marble kitchen countertop, completely empty foreground space, warm ambient lighting";
+    else if (bgOption === 'Fondo exterior ciudad') environmentDescription = "stylish outdoor table surface, empty foreground, urban city background during golden hour with soft bokeh";
+    else if (bgOption === 'Fondo exterior parque') environmentDescription = "clean outdoor wooden bench surface, empty foreground, lush green park background with natural sunlight";
+    else if (bgOption === 'Fondo escritorio de trabajo y PC') environmentDescription = "modern programmer desk setup with laptop and keyboard in the background, leaving a clean empty space in the foreground";
 
-    // Prompt visual optimizado para máxima nitidez, primer plano y detalle comercial de alta gama
-    const visualPrompt = encodeURIComponent(`Extreme close-up macro product photography of ${productName}, sharp crisp focus on the item details, ${environmentDescription}, highly detailed textures, studio commercial lighting, Instagram aesthetic, 8k resolution, photorealistic, masterpiece`);
+    // Prompt visual estricto para generar SOLAMENTE el fondo vacío, sin ningún objeto ni producto simulado
+    const visualPrompt = encodeURIComponent(`Professional empty commercial studio background, ${environmentDescription}, high-end advertising photography for Instagram, photorealistic, 8k resolution, cinematic lighting, NO objects in the foreground, completely empty space ready for product placement`);
     
-    // Forzamos parámetros de alta calidad en la URL (nologo y mejor renderizado)
     const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=1080&height=1080&nologo=true&enhance=true`;
 
     return res.status(200).json({
