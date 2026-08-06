@@ -24,7 +24,6 @@ export default async function handler(req, res) {
       }
     `;
 
-    // Conexión con el modelo vigente y activo gemini-3.6-flash
     const textApiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
@@ -51,7 +50,6 @@ export default async function handler(req, res) {
     const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const generatedContent = JSON.parse(cleanedText);
 
-    // Generador de imagen dinámico y real basado en el entorno seleccionado
     const visualPrompt = encodeURIComponent(`Professional product photography, ${productName}, ${bgOption || 'studio background'}, high quality, commercial lighting`);
     const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=600&height=600&nologo=true`;
 
