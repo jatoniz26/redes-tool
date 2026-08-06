@@ -1,20 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('generate-form');
-  const submitButton = document.getElementById('tu-boton-accion') || document.querySelector('button[type="submit"]');
+  const submitButton = document.getElementById('tu-boton-accion');
   
   const instagramOutput = document.getElementById('instagram-output');
   const tiktokOutput = document.getElementById('tiktok-output');
   const hashtagsOutput = document.getElementById('hashtags-output');
   const imageElement = document.getElementById('imagen-resultado');
+  const imagePlaceholder = document.getElementById('image-placeholder');
 
   if (submitButton) {
     submitButton.addEventListener('click', async (e) => {
       e.preventDefault();
-      console.log("¡Botón presionado, iniciando solicitud...");
 
+      // Captura de valores usando los IDs exactos del HTML
       const productName = document.getElementById('product-name')?.value;
       const keyBenefit = document.getElementById('key-benefit')?.value;
-      const bgOption = document.getElementById('bg-option')?.value || 'Estudio profesional';
+      const bgOption = document.getElementById('bg-option')?.value || 'Estudio profesional minimalista';
 
       if (!productName || !keyBenefit) {
         alert('Por favor completa los campos obligatorios del producto y beneficio.');
@@ -40,16 +40,19 @@ document.addEventListener('DOMContentLoaded', () => {
           throw new Error(data.error || 'Error al conectar con el servidor');
         }
 
+        // Mostrar textos generados
         if (instagramOutput) instagramOutput.textContent = data.instagram_copy;
         if (tiktokOutput) tiktokOutput.textContent = data.tiktok_copy;
         if (hashtagsOutput) hashtagsOutput.textContent = data.hashtags;
 
+        // Mostrar la imagen generada y ocultar el placeholder
         if (imageElement && data.image_url) {
           imageElement.src = data.image_url;
           imageElement.style.display = 'block';
+          if (imagePlaceholder) {
+            imagePlaceholder.style.display = 'none';
+          }
         }
-
-        console.log("¡Contenido generado con éxito!");
 
       } catch (error) {
         console.error('Error detallado:', error);
@@ -59,7 +62,5 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.disabled = false;
       }
     });
-  } else {
-    console.warn("No se encontró el botón de acción en el DOM. Revisa los IDs de tu HTML.");
   }
 });
