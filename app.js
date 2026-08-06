@@ -14,8 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const productName = document.getElementById('product-name')?.value;
       const keyBenefit = document.getElementById('key-benefit')?.value;
       const bgOption = document.getElementById('bg-option')?.value || 'Estudio profesional minimalista';
-      const imageInput = document.getElementById('user-image');
-      const userFile = imageInput?.files[0];
 
       if (!productName || !keyBenefit) {
         alert('Por favor completa los campos obligatorios del producto y beneficio.');
@@ -27,18 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
       submitButton.disabled = true;
 
       try {
-        const formData = new FormData();
-        formData.append('productName', productName);
-        formData.append('keyBenefit', keyBenefit);
-        formData.append('bgOption', bgOption);
-        
-        if (userFile) {
-          formData.append('userImage', userFile);
-        }
-
         const response = await fetch('/api/generate', {
           method: 'POST',
-          body: formData, // Importante: Sin cabecera Content-Type manual para que el navegador asigne el boundary correcto de multipart
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ productName, keyBenefit, bgOption }),
         });
 
         const data = await response.json();
