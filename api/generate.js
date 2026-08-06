@@ -3,7 +3,7 @@ import fs from 'fs';
 
 export const config = {
   api: {
-    bodyParser: false, // Desactivar parser para recibir archivos binarios con formidable
+    bodyParser: false, // Desactivar el parser por defecto para recibir archivos binarios con formidable
   },
 };
 
@@ -51,8 +51,7 @@ export default async function handler(req, res) {
       {
         "instagram_copy": "Un texto persuasivo y comercial para Instagram basado en las características reales de la foto del producto, emojis, párrafos y llamada a la acción.",
         "tiktok_copy": "Un guion dinámico y corto para TikTok adaptado al producto, con ganchos iniciales.",
-        "hashtags": "#hashtag1 #hashtag2 #hashtag3 #hashtag4 #hashtag5",
-        "visual_prompt": "A detailed commercial macro close-up product photography background, clean flat surface in the foreground with empty space for product placement, inside a modern aesthetic environment matching ${bgOption}, studio lighting, photorealistic, 8k resolution, shallow depth of field"
+        "hashtags": "#hashtag1 #hashtag2 #hashtag3 #hashtag4 #hashtag5"
       }
     `;
 
@@ -81,8 +80,12 @@ export default async function handler(req, res) {
     const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const generatedContent = JSON.parse(cleanedText);
 
-    const visualPrompt = encodeURIComponent(generatedContent.visual_prompt || `Professional macro close-up product photography background for ${productName}`);
-    const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=1080&height=1080&nologo=true&enhance=true`;
+    // Prompt visual reforzado con restricciones estrictas para prohibir la creación de objetos y garantizar el espacio vacío
+    const visualPrompt = encodeURIComponent(`Professional macro photography of an EMPTY, COMPLETELY BLANK, FLAT SURFACE. No objects, no products, no items. Just a high-quality ${bgOption} background, clean minimalist aesthetic, studio lighting, photorealistic, 8k resolution, professional bokeh, high-end advertising photography, clear space in the center for product placement.`);
+    
+    // Incluimos un seed aleatorio para evitar que el generador repita la misma imagen en caché
+    const randomSeed = Math.floor(Math.random() * 10000);
+    const imageUrl = `https://image.pollinations.ai/prompt/${visualPrompt}?width=1080&height=1080&nologo=true&enhance=true&seed=${randomSeed}`;
 
     return res.status(200).json({
       instagram_copy: generatedContent.instagram_copy,
