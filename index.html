@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Herramienta de redes - proyecto básico">
+  <title>Redes Tool</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Redes Tool</h1>
+      <p>Interfaz básica para trabajar con generación de contenido y herramientas de red.</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro container">
+      <h2>Bienvenido</h2>
+      <p>Esta es una página inicial con estructura básica de HTML, CSS y JavaScript.</p>
+    </section>
+
+    <section class="actions container">
+      <h3>Acciones</h3>
+      <button id="actionButton">Ejecutar acción</button>
+      <div id="result" class="result"></div>
+    </section>
+
+    <section class="form-panel container">
+      <h3>Generar publicación</h3>
+      <form id="social-automation-form">
+        <div class="upload-section">
+          <label for="productImage">Sube la foto del producto (Fondo Blanco):</label>
+          <input type="file" id="productImage" accept="image/png, image/jpeg" required>
+        </div>
+
+        <fieldset class="background-options">
+          <legend>Selecciona el entorno generado por IA:</legend>
+
+          <label><input type="radio" name="bgOption" value="office"> Fondo Oficina</label>
+          <label><input type="radio" name="bgOption" value="desk"> Fondo Escritorio</label>
+          <label><input type="radio" name="bgOption" value="kitchen"> Fondo Cocina</label>
+          <label><input type="radio" name="bgOption" value="city_outdoor"> Fondo exterior ciudad</label>
+          <label><input type="radio" name="bgOption" value="park_outdoor"> Fondo exterior parque</label>
+          <label><input type="radio" name="bgOption" value="work_pc"> Fondo escritorio de trabajo y PC</label>
+        </fieldset>
+
+        <div class="context-fields">
+          <label for="productName">Nombre del Producto:</label>
+          <input type="text" id="productName" placeholder="Ej. Termo de Acero Inoxidable">
+
+          <label for="keyBenefit">Beneficio Principal:</label>
+          <input type="text" id="keyBenefit" placeholder="Ej. Mantiene el frío por 24 horas">
+        </div>
+
+        <button type="submit">Generar Publicación</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Redes Tool</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html> 
