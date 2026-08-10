@@ -2,7 +2,7 @@
 import formidable from 'formidable';
 import fs from 'fs';
 
-// ⚠️ OBLIGATORIO: bodyParser desactivado para que formidable parsee el FormData[cite: 1]
+// ⚠️ OBLIGATORIO: bodyParser desactivado para que formidable parsee el FormData
 export const config = {
   api: {
     bodyParser: false,
@@ -10,16 +10,17 @@ export const config = {
 };
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-// CORRECCIÓN APLICADA: Uso de gemini-1.5-flash-latest para evitar el error 404
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
 
-// Helper: parsea el request multipart con formidable[cite: 1]
+// CORRECCIÓN APLICADA: Uso estricto de gemini-3.6-flash como indicaste
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+// Helper: parsea el request multipart con formidable
 function parseForm(req) {
   return new Promise((resolve, reject) => {
     const form = formidable({
       multiples: false,
       keepExtensions: true,
-      maxFileSize: 10 * 1024 * 1024, // 10MB[cite: 1]
+      maxFileSize: 10 * 1024 * 1024, // 10MB
     });
 
     form.parse(req, (err, fields, files) => {
@@ -29,20 +30,20 @@ function parseForm(req) {
   });
 }
 
-// Helper: convierte el archivo a Base64 puro[cite: 1]
+// Helper: convierte el archivo a Base64 puro
 function fileToBase64(file) {
   const filePath = file.filepath || file.path;
   const buffer = fs.readFileSync(filePath);
   return buffer.toString('base64');
 }
 
-// Helper: extrae el primer valor de un campo de formidable[cite: 1]
+// Helper: extrae el primer valor de un campo de formidable
 function firstValue(field) {
   if (Array.isArray(field)) return field[0];
   return field;
 }
 
-// Construye el prompt de texto para Gemini[cite: 1]
+// Construye el prompt de texto para Gemini
 function buildGeminiPrompt(productName, mainBenefit, background) {
   return `
 Eres un experto en marketing digital y copywriting para redes sociales, especializado en productos de impresión 3D.
@@ -79,7 +80,7 @@ Devuelve tu respuesta ÚNICAMENTE como un objeto JSON puro (sin texto adicional,
 `.trim();
 }
 
-// Llama a Gemini con la imagen en Base64 + prompt de texto[cite: 1]
+// Llama a Gemini con la imagen en Base64 + prompt de texto
 async function callGemini(base64Image, mimeType, promptText) {
   const body = {
     contents: [
@@ -122,7 +123,7 @@ async function callGemini(base64Image, mimeType, promptText) {
   return rawText;
 }
 
-// Parseo seguro del JSON devuelto por Gemini[cite: 1]
+// Parseo seguro del JSON devuelto por Gemini
 function safeParseGeminiJSON(rawText, productName) {
   try {
     const cleaned = rawText
@@ -166,7 +167,7 @@ function safeParseGeminiJSON(rawText, productName) {
   }
 }
 
-// Construye el prompt visual estricto para Pollinations AI[cite: 1]
+// Construye el prompt visual estricto para Pollinations AI
 function buildPollinationsUrl(background) {
   const seed = Math.floor(Math.random() * 1_000_000);
 
@@ -185,7 +186,7 @@ function buildPollinationsUrl(background) {
   return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&nologo=true`;
 }
 
-// Handler principal[cite: 1]
+// Handler principal
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido. Usa POST.' });
@@ -218,7 +219,10 @@ export default async function handler(req, res) {
       copys = safeParseGeminiJSON(rawGeminiText, productName);
     } catch (geminiError) {
       console.error('⚠️ Error llamando a Gemini, usando fallback:', geminiError.message);
+      
+      // Mantenemos el truco de debugging para que veas si hay otro error distinto en la UI
       copys = safeParseGeminiJSON('', productName); 
+      copys.instagram_copy[0] = `⚠️ ERROR REAL DE GEMINI: ${geminiError.message}`;
     }
 
     const backgroundImageUrl = buildPollinationsUrl(background);
