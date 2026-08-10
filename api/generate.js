@@ -1,9 +1,8 @@
 // api/generate.js
-// TonizLab 3D — Generador de Copys + Fondo Vacío
 import formidable from 'formidable';
 import fs from 'fs';
 
-// ⚠️ OBLIGATORIO: bodyParser debe estar desactivado para que formidable pueda parsear el FormData[cite: 1].
+// ⚠️ OBLIGATORIO: bodyParser desactivado para que formidable parsee el FormData[cite: 1]
 export const config = {
   api: {
     bodyParser: false,
@@ -11,7 +10,8 @@ export const config = {
 };
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+// CORRECCIÓN APLICADA: Uso de gemini-1.5-flash-latest para evitar el error 404
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
 
 // Helper: parsea el request multipart con formidable[cite: 1]
 function parseForm(req) {

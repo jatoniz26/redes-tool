@@ -1,5 +1,5 @@
 // app.js — TonizLab 3D
-// Vanilla JS: arma el FormData, llama a /api/generate, pinta los resultados.
+// Vanilla JS: arma el FormData, llama a /api/generate, pinta los resultados[cite: 2].
 
 const form = document.getElementById('generatorForm');
 const submitBtn = document.getElementById('submitBtn');
@@ -40,10 +40,10 @@ document.addEventListener('click', (e) => {
   let textToCopy = '';
 
   if (btn.dataset.target) {
-    // Botón estático (ej. hashtags)
+    // Botón estático (ej. hashtags)[cite: 2]
     textToCopy = document.getElementById(btn.dataset.target).textContent;
   } else if (btn.dataset.copyText !== undefined) {
-    // Botón de variante generado dinámicamente
+    // Botón de variante generado dinámicamente[cite: 2]
     textToCopy = btn.dataset.copyText;
   } else {
     return;
@@ -138,7 +138,7 @@ function renderResults(data) {
 }
 
 // Pinta un array de variantes (strings) dentro de un contenedor, cada una
-// con su propia etiqueta "Variante N" y botón de copiar.
+// con su propia etiqueta "Variante N" y botón de copiar[cite: 2].
 function renderVariants(container, variants) {
   const list = Array.isArray(variants) ? variants : [variants].filter(Boolean);
 
