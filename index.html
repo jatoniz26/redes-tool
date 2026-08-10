@@ -8,103 +8,178 @@
     * { box-sizing: border-box; }
     body {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      max-width: 720px;
-      margin: 40px auto;
+      max-width: 1280px;
+      margin: 30px auto;
       padding: 0 20px;
       background: #0f1115;
       color: #e8e8ec;
     }
-    h1 { font-size: 1.4rem; margin-bottom: 4px; }
-    p.subtitle { color: #9a9aa5; margin-top: 0; margin-bottom: 24px; }
-    label { display: block; margin-top: 16px; margin-bottom: 6px; font-size: 0.9rem; color: #c4c4cc; }
+    header {
+      margin-bottom: 24px;
+      border-bottom: 1px solid #2a2d36;
+      padding-bottom: 14px;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 4px; }
+    p.subtitle { color: #9a9aa5; margin-top: 0; margin-bottom: 0; }
+
+    /* LAYOUT HORIZONTAL DE DOS COLUMNAS */
+    .app-container {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .app-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: #1a1d24;
+      border: 1px solid #2a2d36;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    label { display: block; margin-top: 14px; margin-bottom: 6px; font-size: 0.9rem; color: #c4c4cc; }
     input[type="text"] {
       width: 100%; padding: 10px 12px; border-radius: 8px;
-      border: 1px solid #2a2d36; background: #1a1d24; color: #e8e8ec; font-size: 0.95rem;
+      border: 1px solid #2a2d36; background: #14161c; color: #e8e8ec; font-size: 0.95rem;
     }
     input[type="file"] {
       width: 100%; padding: 10px 0; color: #c4c4cc;
     }
     #preview {
-      margin-top: 10px; max-width: 100%; max-height: 220px;
+      margin-top: 10px; max-width: 100%; max-height: 200px;
       border-radius: 8px; display: none; border: 1px solid #2a2d36;
     }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+    }
     button {
-      margin-top: 24px; width: 100%; padding: 13px; border: none;
-      border-radius: 8px; background: #4f7cff; color: white; font-size: 1rem;
+      flex: 1; padding: 12px; border: none;
+      border-radius: 8px; font-size: 0.95rem;
       font-weight: 600; cursor: pointer;
     }
-    button:disabled { background: #3a3d46; cursor: not-allowed; }
-    #status { margin-top: 14px; font-size: 0.9rem; color: #9a9aa5; min-height: 20px; }
-    .result-block {
-      display: none; margin-top: 30px; padding: 18px; background: #1a1d24;
-      border-radius: 10px; border: 1px solid #2a2d36;
+    #submitBtn { background: #4f7cff; color: white; }
+    #submitBtn:disabled { background: #3a3d46; cursor: not-allowed; }
+    
+    #resetBtn { background: #2a2d36; color: #c4c4cc; }
+    #resetBtn:hover { background: #353945; color: #fff; }
+
+    #status { margin-top: 14px; font-size: 0.85rem; color: #9a9aa5; min-height: 20px; }
+
+    /* CONTENEDOR DE RESULTADOS */
+    .results-panel {
+      display: none;
     }
-    .result-block h3 { margin-top: 0; font-size: 1rem; color: #c4c4cc; }
-    .result-block pre {
-      white-space: pre-wrap; word-wrap: break-word; font-family: inherit;
-      font-size: 0.92rem; line-height: 1.5; margin: 0;
+    .result-section {
+      background: #14161c;
+      border: 1px solid #2a2d36;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
     }
+    .result-section h3 { margin-top: 0; font-size: 0.95rem; color: #c4c4cc; margin-bottom: 12px; }
+    
     .copy-btn {
-      margin-top: 10px; width: auto; padding: 6px 12px; font-size: 0.8rem;
-      background: #2a2d36;
+      margin-top: 8px; width: auto; padding: 6px 12px; font-size: 0.8rem;
+      background: #2a2d36; color: #e8e8ec; border-radius: 6px; border: none; cursor: pointer;
     }
+    .copy-btn:hover { background: #353945; }
+
     .variant-item {
-      background: #14161c; border: 1px solid #2a2d36; border-radius: 8px;
-      padding: 12px 14px; margin-bottom: 10px;
+      background: #101217; border: 1px solid #2a2d36; border-radius: 8px;
+      padding: 12px; margin-bottom: 10px;
     }
+    .variant-item:last-child { margin-bottom: 0; }
     .variant-item .variant-label {
       font-size: 0.75rem; color: #6b8cff; font-weight: 600; margin-bottom: 6px;
       text-transform: uppercase; letter-spacing: 0.03em;
     }
-    .variant-item pre {
+    .variant-item pre, pre#hashtags {
       white-space: pre-wrap; word-wrap: break-word; font-family: inherit;
-      font-size: 0.92rem; line-height: 1.5; margin: 0;
+      font-size: 0.9rem; line-height: 1.4; margin: 0; color: #d0d0d5;
     }
-    .variant-item .copy-btn { margin-top: 8px; }
+    .placeholder-text {
+      color: #5a5a65; font-style: italic; text-align: center; padding: 40px 20px; margin: 0;
+    }
     .error { color: #ff6b6b; }
   </style>
 </head>
 <body>
-  <h1>TonizLab 3D 🖨️</h1>
-  <p class="subtitle">Sube una foto real de tu pieza impresa para generar copys, guiones y contenido.</p>
+  <header>
+    <h1>TonizLab 3D 🖨️</h1>
+    <p class="subtitle">Asistente Inteligente de Contenido para Redes Sociales</p>
+  </header>
 
-  <form id="generatorForm">
-    <label for="productName">Nombre del producto</label>
-    <input type="text" id="productName" name="productName" placeholder="Ej: Organizador Modular Escritorio" required />
+  <div class="app-container">
+    <!-- COLUMNA IZQUIERDA: Formulario -->
+    <div class="panel">
+      <form id="generatorForm">
+        <label for="productName">Nombre del producto</label>
+        <input type="text" id="productName" name="productName" placeholder="Ej: Organizador Modular Escritorio" required />
 
-    <label for="mainBenefit">Beneficio principal</label>
-    <input type="text" id="mainBenefit" name="mainBenefit" placeholder="Ej: Organiza tu espacio sin perder estilo" required />
+        <label for="mainBenefit">Beneficio principal</label>
+        <input type="text" id="mainBenefit" name="mainBenefit" placeholder="Ej: Organiza tu espacio sin perder estilo" required />
 
-    <label for="printTime">Tiempo de impresión (Opcional)</label>
-    <input type="text" id="printTime" name="printTime" placeholder="Ej: 4 horas y 30 minutos" />
+        <label for="printTime">Tiempo de impresión (Opcional)</label>
+        <input type="text" id="printTime" name="printTime" placeholder="Ej: 4 horas y 30 minutos" />
 
-    <label for="filamentType">Tipo de filamento (Opcional)</label>
-    <input type="text" id="filamentType" name="filamentType" placeholder="Ej: PLA+ Matte Negro" />
+        <label for="filamentType">Tipo de filamento (Opcional)</label>
+        <input type="text" id="filamentType" name="filamentType" placeholder="Ej: PLA+ Matte Negro" />
 
-    <label for="image">Foto real de la pieza</label>
-    <input type="file" id="image" name="image" accept="image/*" required />
-    <img id="preview" alt="Vista previa" />
+        <label for="image">Foto real de la pieza</label>
+        <input type="file" id="image" name="image" accept="image/*" required />
+        <img id="preview" alt="Vista previa" />
 
-    <button type="submit" id="submitBtn">Analizar pieza y generar contenido</button>
-    <div id="status"></div>
-  </form>
+        <div class="btn-group">
+          <button type="button" id="resetBtn">Limpiar</button>
+          <button type="submit" id="submitBtn">Generar Contenido</button>
+        </div>
+        <div id="status"></div>
+      </form>
+    </div>
 
-  <div class="result-block" id="copyResult">
-    <h3>📸 Instagram (3 Opciones)</h3>
-    <div id="igVariants"></div>
+    <!-- COLUMNA DERECHA: Resultados -->
+    <div class="panel">
+      <div id="emptyState">
+        <p class="placeholder-text">Sube una foto y llena los datos a la izquierda para generar los copys, carruseles e historias de tu pieza 3D. 🚀</p>
+      </div>
 
-    <h3 style="margin-top:22px;">🎬 TikTok (3 Opciones)</h3>
-    <div id="ttVariants"></div>
+      <div class="results-panel" id="copyResult">
+        <div class="result-section">
+          <h3>📸 Instagram (3 Opciones)</h3>
+          <div id="igVariants"></div>
+        </div>
 
-    <h3 style="margin-top:22px;">🎠 Carruseles Educativos (3 Opciones)</h3>
-    <div id="carouselVariants"></div>
+        <div class="result-section">
+          <h3>🎬 TikTok (3 Opciones)</h3>
+          <div id="ttVariants"></div>
+        </div>
 
-    <h3 style="margin-top:22px;">📱 Historias: Detrás de escenas (3 Opciones)</h3>
-    <div id="storiesVariants"></div>
+        <div class="result-section">
+          <h3>🎠 Carruseles Educativos (3 Opciones)</h3>
+          <div id="carouselVariants"></div>
+        </div>
 
-    <h3 style="margin-top:22px;">🏷️ Hashtags</h3>
-    <pre id="hashtags"></pre>
-    <button class="copy-btn" data-target="hashtags">Copiar</button>
+        <div class="result-section">
+          <h3>📱 Historias: Detrás de escenas (3 Opciones)</h3>
+          <div id="storiesVariants"></div>
+        </div>
+
+        <div class="result-section">
+          <h3>🏷️ Hashtags</h3>
+          <pre id="hashtags"></pre>
+          <button class="copy-btn" data-target="hashtags">Copiar</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>

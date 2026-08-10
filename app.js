@@ -1,19 +1,23 @@
 // app.js — TonizLab 3D
+// Vanilla JS: arma el FormData, llama a /api/generate, pinta los resultados.
+
 const form = document.getElementById('generatorForm');
 const submitBtn = document.getElementById('submitBtn');
+const resetBtn = document.getElementById('resetBtn');
 const statusEl = document.getElementById('status');
 
 const imageInput = document.getElementById('image');
 const previewImg = document.getElementById('preview');
 
+const emptyState = document.getElementById('emptyState');
 const copyResult = document.getElementById('copyResult');
 const igVariantsEl = document.getElementById('igVariants');
 const ttVariantsEl = document.getElementById('ttVariants');
-const carouselVariantsEl = document.getElementById('carouselVariants'); // NUEVO
-const storiesVariantsEl = document.getElementById('storiesVariants'); // NUEVO
+const carouselVariantsEl = document.getElementById('carouselVariants');
+const storiesVariantsEl = document.getElementById('storiesVariants');
 const hashtagsEl = document.getElementById('hashtags');
 
-// Vista previa de la imagen
+// --- Vista previa de la imagen seleccionada -------------------------------
 imageInput.addEventListener('change', () => {
   const file = imageInput.files[0];
   if (!file) {
@@ -28,16 +32,30 @@ imageInput.addEventListener('change', () => {
   reader.readAsDataURL(file);
 });
 
-// Botones "Copiar"
+// --- Botón Reset / Limpiar --------------------------------------------------
+resetBtn.addEventListener('click', () => {
+  form.reset();
+  previewImg.src = '';
+  previewImg.style.display = 'none';
+  copyResult.style.display = 'none';
+  if (emptyState) emptyState.style.display = 'block';
+  statusEl.textContent = '';
+});
+
+// --- Botones "Copiar" (delegado: funciona también con variantes dinámicas) --
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.copy-btn');
   if (!btn) return;
 
-  let textToCopy = btn.dataset.target 
-    ? document.getElementById(btn.dataset.target).textContent 
-    : btn.dataset.copyText;
+  let textToCopy = '';
 
-  if (!textToCopy) return;
+  if (btn.dataset.target) {
+    textToCopy = document.getElementById(btn.dataset.target).textContent;
+  } else if (btn.dataset.copyText !== undefined) {
+    textToCopy = btn.dataset.copyText;
+  } else {
+    return;
+  }
 
   navigator.clipboard.writeText(textToCopy).then(() => {
     const originalText = btn.textContent;
@@ -46,7 +64,7 @@ document.addEventListener('click', (e) => {
   });
 });
 
-// Envío del formulario
+// --- Envío del formulario ----------------------------------------------------
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -60,12 +78,11 @@ form.addEventListener('submit', async (e) => {
   formData.append('productName', document.getElementById('productName').value.trim());
   formData.append('mainBenefit', document.getElementById('mainBenefit').value.trim());
   
-  // Agregamos los nuevos campos
   const printTimeInput = document.getElementById('printTime');
   const filamentTypeInput = document.getElementById('filamentType');
-  if(printTimeInput) formData.append('printTime', printTimeInput.value.trim());
-  if(filamentTypeInput) formData.append('filamentType', filamentTypeInput.value.trim());
-
+  if (printTimeInput) formData.append('printTime', printTimeInput.value.trim());
+  if (filamentTypeInput) formData.append('filamentType', filamentTypeInput.value.trim());
+  
   formData.append('image', file);
 
   toggleLoading(true);
@@ -85,7 +102,7 @@ form.addEventListener('submit', async (e) => {
     }
 
     renderResults(data);
-    setStatus('¡Listo! Copys, Carruseles e Historias generadas.');
+    setStatus('¡Listo! Copys, carruseles e historias generados.');
   } catch (err) {
     console.error('Error generando contenido:', err);
     setStatus(`❌ Error: ${err.message}`, true);
@@ -97,7 +114,8 @@ form.addEventListener('submit', async (e) => {
 function renderResults(data) {
   const { copys } = data;
 
-  // Limpiar y renderizar todas las secciones
+  if (emptyState) emptyState.style.display = 'none';
+
   igVariantsEl.innerHTML = '';
   renderVariants(igVariantsEl, copys.instagram_copy);
 
@@ -118,6 +136,8 @@ function renderResults(data) {
   copyResult.style.display = 'block';
 }
 
+// Pinta un array de variantes (strings) dentro de un contenedor, cada una
+// con su propia etiqueta "Opción N" y botón de copiar.
 function renderVariants(container, variants) {
   const list = Array.isArray(variants) ? variants : [variants].filter(Boolean);
 
@@ -146,7 +166,7 @@ function renderVariants(container, variants) {
 
 function toggleLoading(isLoading) {
   submitBtn.disabled = isLoading;
-  submitBtn.textContent = isLoading ? 'Procesando...' : 'Analizar pieza y generar';
+  submitBtn.textContent = isLoading ? 'Procesando...' : 'Generar Contenido';
 }
 
 function setStatus(message, isError = false) {
