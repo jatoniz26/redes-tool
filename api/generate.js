@@ -2,7 +2,6 @@
 import formidable from 'formidable';
 import fs from 'fs';
 
-// ⚠️ OBLIGATORIO: bodyParser desactivado para que formidable parsee el FormData
 export const config = {
   api: {
     bodyParser: false,
@@ -10,19 +9,15 @@ export const config = {
 };
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
-// CORRECCIÓN APLICADA: Uso estricto de gemini-3.6-flash como indicaste
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-// Helper: parsea el request multipart con formidable
 function parseForm(req) {
   return new Promise((resolve, reject) => {
     const form = formidable({
       multiples: false,
       keepExtensions: true,
-      maxFileSize: 10 * 1024 * 1024, // 10MB
+      maxFileSize: 10 * 1024 * 1024,
     });
-
     form.parse(req, (err, fields, files) => {
       if (err) return reject(err);
       resolve({ fields, files });
@@ -30,69 +25,69 @@ function parseForm(req) {
   });
 }
 
-// Helper: convierte el archivo a Base64 puro
 function fileToBase64(file) {
   const filePath = file.filepath || file.path;
   const buffer = fs.readFileSync(filePath);
   return buffer.toString('base64');
 }
 
-// Helper: extrae el primer valor de un campo de formidable
 function firstValue(field) {
   if (Array.isArray(field)) return field[0];
   return field;
 }
 
-// Construye el prompt de texto para Gemini
-function buildGeminiPrompt(productName, mainBenefit, background) {
+function buildGeminiPrompt(productName, mainBenefit, printTime, filamentType) {
   return `
 Eres un experto en marketing digital y copywriting para redes sociales, especializado en productos de impresión 3D.
 
 Analiza DETALLADAMENTE la imagen adjunta de una pieza impresa en 3D. Observa con precisión:
 - La geometría exacta de la pieza (formas, ángulos, módulos, divisiones internas, texturas de capa visibles).
 - Los colores exactos del filamento utilizado.
-- Cualquier característica distintiva (acabado, tamaño aparente, funcionalidad visible).
+- Cualquier característica distintiva.
 
-Datos del producto proporcionados por el vendedor:
+Datos del producto y fabricación:
 - Nombre del producto: "${productName}"
 - Beneficio principal a comunicar: "${mainBenefit}"
-- Fondo/ambientación elegida para el fotomontaje final: "${background}"
+- Tiempo de impresión: "${printTime}"
+- Tipo de filamento: "${filamentType}"
+- Máquina utilizada: Bambu Lab A1 Combo
 
 Con toda esa información, genera copys de venta para la marca "TonizLab 3D".
-
-IMPORTANTE: para Instagram y TikTok debes generar EXACTAMENTE 3 variantes distintas entre sí (diferente ángulo/tono: una más emocional, una más directa/orientada a venta, una más creativa o humorística), no repitas la misma idea con sinónimos.
-
-Devuelve tu respuesta ÚNICAMENTE como un objeto JSON puro (sin texto adicional, sin explicaciones, sin backticks, sin markdown), con EXACTAMENTE esta estructura:
+Devuelve tu respuesta ÚNICAMENTE como un objeto JSON puro (sin texto adicional, sin backticks), con EXACTAMENTE esta estructura:
 
 {
   "instagram_copy": [
-    "Variante 1: texto con emojis, detalles visuales reales de la pieza, y un CTA claro al final",
+    "Variante 1: texto con emojis, detalles visuales de la pieza, y un CTA claro al final",
     "Variante 2: mismo producto, ángulo distinto",
     "Variante 3: mismo producto, ángulo distinto"
   ],
   "tiktok_copy": [
-    "Variante 1: Gancho (caption) muy invitacional para acompañar el video, animando a la gente a quedarse a ver la pieza en acción y cómo funciona. NO uses formato de guion ni escenas.",
-    "Variante 2: Caption invitacional con un tono de curiosidad sobre el proceso de impresión 3D o el uso de este producto.",
-    "Variante 3: Caption directo y dinámico invitando a ver el resultado final de esta pieza e invitando a comentar."
+    "Variante 1: Caption muy invitacional para acompañar el video. NO uses formato de guion.",
+    "Variante 2: Caption con curiosidad sobre la pieza.",
+    "Variante 3: Caption directo y dinámico invitando a comentar."
   ],
-  "hashtags": "Lista de hashtags relevantes separados por espacio, debe incluir obligatoriamente #TonizLab3D"
+  "carousel_script": [
+    "Carrusel 1: Guion de 3 slides. Slide 1 (El problema), Slide 2 (Cómo el diseño y geometría de esta pieza lo soluciona), Slide 3 (CTA de TonizLab 3D).",
+    "Carrusel 2: Guion de 3 slides enfocado en la utilidad en el día a día.",
+    "Carrusel 3: Guion educativo sobre la resistencia o modularidad del producto."
+  ],
+  "stories_behind_the_scenes": [
+    "Historia 1: Texto para una foto/video sobre el tiempo de impresión (${printTime}) y el material (${filamentType}).",
+    "Historia 2: Texto sobre la precisión de la Bambu Lab A1 Combo fabricando esta pieza geométrica.",
+    "Historia 3: Texto interactivo (encuesta o caja de preguntas) sobre el color o uso."
+  ],
+  "hashtags": "Lista de hashtags separados por espacio, incluyendo #TonizLab3D"
 }
 `.trim();
 }
 
-// Llama a Gemini con la imagen en Base64 + prompt de texto
 async function callGemini(base64Image, mimeType, promptText) {
   const body = {
     contents: [
       {
         parts: [
           { text: promptText },
-          {
-            inlineData: {
-              mimeType: mimeType || 'image/jpeg',
-              data: base64Image,
-            },
-          },
+          { inlineData: { mimeType: mimeType || 'image/jpeg', data: base64Image } },
         ],
       },
     ],
@@ -116,128 +111,64 @@ async function callGemini(base64Image, mimeType, promptText) {
   const data = await response.json();
   const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-  if (!rawText) {
-    throw new Error('Gemini no devolvió contenido de texto válido.');
-  }
-
+  if (!rawText) throw new Error('Gemini no devolvió contenido válido.');
   return rawText;
 }
 
-// Parseo seguro del JSON devuelto por Gemini
 function safeParseGeminiJSON(rawText, productName) {
   try {
-    const cleaned = rawText
-      .replace(/```json/gi, '')
-      .replace(/```/g, '')
-      .trim();
-
+    const cleaned = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
     const parsed = JSON.parse(cleaned);
-
-    const isValidVariantArray = (val) =>
-      Array.isArray(val) && val.length > 0 && val.every((v) => typeof v === 'string');
-
-    if (
-      !isValidVariantArray(parsed.instagram_copy) ||
-      !isValidVariantArray(parsed.tiktok_copy) ||
-      typeof parsed.hashtags !== 'string'
-    ) {
-      throw new Error('Estructura JSON incompleta.');
-    }
 
     if (!parsed.hashtags.includes('#TonizLab3D')) {
       parsed.hashtags += ' #TonizLab3D';
     }
-
     return parsed;
   } catch (err) {
-    console.error('⚠️ Fallback activado. Error parseando JSON de Gemini:', err.message);
+    console.error('⚠️ Error parseando JSON de Gemini:', err.message);
     return {
-      instagram_copy: [
-        `✨ Descubre "${productName}" de TonizLab 3D. Diseño, funcionalidad y calidad impresa capa por capa. 🖨️ ¡Escríbenos para el tuyo! 👇`,
-        `¿Cansado del desorden? "${productName}" está pensado para resolverlo, pieza por pieza. 🧩 Link en bio para pedir el tuyo.`,
-        `Esto no es un objeto más, es "${productName}" hecho a medida en nuestra Bambu Lab 🖨️🔥 ¿Lo quieres en tu espacio?`,
-      ],
-      tiktok_copy: [
-        `¿Alguna vez te preguntaste cómo funciona "${productName}"? 🖨️ Quédate a ver esta pieza en acción y el resultado final que logramos en TonizLab 3D. 🔥👇`,
-        `El desorden tiene los días contados. 👀 Mira cómo esta pieza impresa en 3D entra en acción y organiza el espacio. ¡Dale play! ▶️`,
-        `De la cama de impresión directo a tu escritorio. 🚀 Acompáñanos a ver cómo diseñamos y usamos "${productName}". ¿Qué te parece el acabado? Te leemos en comentarios. 👇`
-      ],
-      hashtags: '#TonizLab3D #Impresion3D #BambuLab #DisenoFuncional #HechoAMano',
+      instagram_copy: [`Fallback IG 1 para ${productName}`, `Fallback IG 2`, `Fallback IG 3`],
+      tiktok_copy: [`Fallback TT 1`, `Fallback TT 2`, `Fallback TT 3`],
+      carousel_script: [`Fallback Carrusel 1`, `Fallback Carrusel 2`, `Fallback Carrusel 3`],
+      stories_behind_the_scenes: [`Fallback Story 1`, `Fallback Story 2`, `Fallback Story 3`],
+      hashtags: '#TonizLab3D #Impresion3D #BambuLab',
     };
   }
 }
 
-// Construye el prompt visual estricto para Pollinations AI
-function buildPollinationsUrl(background) {
-  const seed = Math.floor(Math.random() * 1_000_000);
-
-  const promptEn = [
-    `extreme close-up macro shot of an empty ${background} surface`,
-    'the surface occupies the entire foreground',
-    'completely blank, strictly NO objects, no products, no items, no props',
-    'negative space, empty space in the center for product placement',
-    'soft blurred background, bokeh, shallow depth of field',
-    'professional studio product photography lighting',
-    'photorealistic, high detail texture',
-  ].join(', ');
-
-  const encodedPrompt = encodeURIComponent(promptEn);
-
-  return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&nologo=true`;
-}
-
-// Handler principal
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método no permitido. Usa POST.' });
-  }
-
-  if (!GEMINI_API_KEY) {
-    return res.status(500).json({ error: 'Falta configurar GEMINI_API_KEY en las variables de entorno de Vercel.' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Usa POST.' });
+  if (!GEMINI_API_KEY) return res.status(500).json({ error: 'Falta GEMINI_API_KEY.' });
 
   try {
     const { fields, files } = await parseForm(req);
 
-    const productName = firstValue(fields.productName) || 'Producto TonizLab 3D';
-    const mainBenefit = firstValue(fields.mainBenefit) || 'Diseño funcional y personalizable';
-    const background = firstValue(fields.background) || 'madera clara';
+    const productName = firstValue(fields.productName) || 'Producto';
+    const mainBenefit = firstValue(fields.mainBenefit) || 'Diseño funcional';
+    const printTime = firstValue(fields.printTime) || 'Varias horas';
+    const filamentType = firstValue(fields.filamentType) || 'PLA';
 
     const imageFile = files.image ? (Array.isArray(files.image) ? files.image[0] : files.image) : null;
-
-    if (!imageFile) {
-      return res.status(400).json({ error: 'No se recibió ninguna imagen (campo "image" requerido).' });
-    }
+    if (!imageFile) return res.status(400).json({ error: 'Imagen requerida.' });
 
     const base64Image = fileToBase64(imageFile);
     const mimeType = imageFile.mimetype || imageFile.type || 'image/jpeg';
 
-    const promptText = buildGeminiPrompt(productName, mainBenefit, background);
+    const promptText = buildGeminiPrompt(productName, mainBenefit, printTime, filamentType);
+    
     let copys;
     try {
       const rawGeminiText = await callGemini(base64Image, mimeType, promptText);
       copys = safeParseGeminiJSON(rawGeminiText, productName);
     } catch (geminiError) {
-      console.error('⚠️ Error llamando a Gemini, usando fallback:', geminiError.message);
-      
-      // Mantenemos el truco de debugging para que veas si hay otro error distinto en la UI
-      copys = safeParseGeminiJSON('', productName); 
-      copys.instagram_copy[0] = `⚠️ ERROR REAL DE GEMINI: ${geminiError.message}`;
+      console.error('Error llamada:', geminiError.message);
+      copys = safeParseGeminiJSON('', productName);
+      copys.instagram_copy[0] = `⚠️ ERROR: ${geminiError.message}`;
     }
 
-    const backgroundImageUrl = buildPollinationsUrl(background);
-
-    return res.status(200).json({
-      success: true,
-      copys,
-      backgroundImageUrl,
-    });
+    // Ya no devolvemos URL de background
+    return res.status(200).json({ success: true, copys });
   } catch (error) {
-    console.error('❌ Error general en /api/generate:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Error interno procesando la solicitud.',
-      detail: error.message,
-    });
+    return res.status(500).json({ success: false, error: error.message });
   }
 }

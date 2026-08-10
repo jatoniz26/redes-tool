@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TonizLab 3D — Generador de Copys</title>
+  <title>TonizLab 3D — Asistente de Contenido</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -17,7 +17,7 @@
     h1 { font-size: 1.4rem; margin-bottom: 4px; }
     p.subtitle { color: #9a9aa5; margin-top: 0; margin-bottom: 24px; }
     label { display: block; margin-top: 16px; margin-bottom: 6px; font-size: 0.9rem; color: #c4c4cc; }
-    input[type="text"], select {
+    input[type="text"] {
       width: 100%; padding: 10px 12px; border-radius: 8px;
       border: 1px solid #2a2d36; background: #1a1d24; color: #e8e8ec; font-size: 0.95rem;
     }
@@ -61,16 +61,12 @@
       font-size: 0.92rem; line-height: 1.5; margin: 0;
     }
     .variant-item .copy-btn { margin-top: 8px; }
-    #bgImage {
-      width: 100%; border-radius: 10px; margin-top: 10px; display: none;
-      border: 1px solid #2a2d36;
-    }
     .error { color: #ff6b6b; }
   </style>
 </head>
 <body>
   <h1>TonizLab 3D 🖨️</h1>
-  <p class="subtitle">Sube una foto real del producto y genera copys + fondo vacío para tu fotomontaje.</p>
+  <p class="subtitle">Sube una foto real de tu pieza impresa para generar copys, guiones y contenido.</p>
 
   <form id="generatorForm">
     <label for="productName">Nombre del producto</label>
@@ -79,39 +75,36 @@
     <label for="mainBenefit">Beneficio principal</label>
     <input type="text" id="mainBenefit" name="mainBenefit" placeholder="Ej: Organiza tu espacio sin perder estilo" required />
 
-    <label for="background">Fondo para el fotomontaje</label>
-    <select id="background" name="background" required>
-      <option value="madera clara">Madera clara</option>
-      <option value="madera oscura">Madera oscura</option>
-      <option value="mármol blanco">Mármol blanco</option>
-      <option value="concreto gris">Concreto gris</option>
-      <option value="tela de lino beige">Tela de lino beige</option>
-    </select>
+    <label for="printTime">Tiempo de impresión (Opcional)</label>
+    <input type="text" id="printTime" name="printTime" placeholder="Ej: 4 horas y 30 minutos" />
 
-    <label for="image">Foto real del producto</label>
+    <label for="filamentType">Tipo de filamento (Opcional)</label>
+    <input type="text" id="filamentType" name="filamentType" placeholder="Ej: PLA+ Matte Negro" />
+
+    <label for="image">Foto real de la pieza</label>
     <input type="file" id="image" name="image" accept="image/*" required />
     <img id="preview" alt="Vista previa" />
 
-    <button type="submit" id="submitBtn">Generar copys y fondo</button>
+    <button type="submit" id="submitBtn">Analizar pieza y generar contenido</button>
     <div id="status"></div>
   </form>
 
   <div class="result-block" id="copyResult">
-    <h3>📸 Instagram (3 variantes)</h3>
+    <h3>📸 Instagram (3 Opciones)</h3>
     <div id="igVariants"></div>
 
-    <h3 style="margin-top:22px;">🎬 TikTok (3 variantes)</h3>
+    <h3 style="margin-top:22px;">🎬 TikTok (3 Opciones)</h3>
     <div id="ttVariants"></div>
+
+    <h3 style="margin-top:22px;">🎠 Carruseles Educativos (3 Opciones)</h3>
+    <div id="carouselVariants"></div>
+
+    <h3 style="margin-top:22px;">📱 Historias: Detrás de escenas (3 Opciones)</h3>
+    <div id="storiesVariants"></div>
 
     <h3 style="margin-top:22px;">🏷️ Hashtags</h3>
     <pre id="hashtags"></pre>
     <button class="copy-btn" data-target="hashtags">Copiar</button>
-  </div>
-
-  <div class="result-block" id="bgResult">
-    <h3>🖼️ Fondo vacío generado</h3>
-    <img id="bgImage" alt="Fondo generado" />
-    <button class="copy-btn" id="downloadBg" style="margin-top:12px;">Descargar fondo</button>
   </div>
 
   <script src="app.js"></script>

@@ -1,6 +1,4 @@
 // app.js — TonizLab 3D
-// Vanilla JS: arma el FormData, llama a /api/generate, pinta los resultados[cite: 2].
-
 const form = document.getElementById('generatorForm');
 const submitBtn = document.getElementById('submitBtn');
 const statusEl = document.getElementById('status');
@@ -11,13 +9,11 @@ const previewImg = document.getElementById('preview');
 const copyResult = document.getElementById('copyResult');
 const igVariantsEl = document.getElementById('igVariants');
 const ttVariantsEl = document.getElementById('ttVariants');
+const carouselVariantsEl = document.getElementById('carouselVariants'); // NUEVO
+const storiesVariantsEl = document.getElementById('storiesVariants'); // NUEVO
 const hashtagsEl = document.getElementById('hashtags');
 
-const bgResult = document.getElementById('bgResult');
-const bgImageEl = document.getElementById('bgImage');
-const downloadBgBtn = document.getElementById('downloadBg');
-
-// --- Vista previa de la imagen seleccionada -------------------------------
+// Vista previa de la imagen
 imageInput.addEventListener('change', () => {
   const file = imageInput.files[0];
   if (!file) {
@@ -32,22 +28,16 @@ imageInput.addEventListener('change', () => {
   reader.readAsDataURL(file);
 });
 
-// --- Botones "Copiar" (delegado: funciona también con variantes dinámicas) --
+// Botones "Copiar"
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.copy-btn');
   if (!btn) return;
 
-  let textToCopy = '';
+  let textToCopy = btn.dataset.target 
+    ? document.getElementById(btn.dataset.target).textContent 
+    : btn.dataset.copyText;
 
-  if (btn.dataset.target) {
-    // Botón estático (ej. hashtags)[cite: 2]
-    textToCopy = document.getElementById(btn.dataset.target).textContent;
-  } else if (btn.dataset.copyText !== undefined) {
-    // Botón de variante generado dinámicamente[cite: 2]
-    textToCopy = btn.dataset.copyText;
-  } else {
-    return;
-  }
+  if (!textToCopy) return;
 
   navigator.clipboard.writeText(textToCopy).then(() => {
     const originalText = btn.textContent;
@@ -56,28 +46,7 @@ document.addEventListener('click', (e) => {
   });
 });
 
-// --- Descargar el fondo generado --------------------------------------------
-downloadBgBtn.addEventListener('click', async () => {
-  const url = bgImageEl.src;
-  if (!url) return;
-  try {
-    const resp = await fetch(url);
-    const blob = await resp.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = 'tonizlab3d-fondo.jpg';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(blobUrl);
-  } catch (err) {
-    console.error('Error descargando el fondo:', err);
-    window.open(url, '_blank');
-  }
-});
-
-// --- Envío del formulario ----------------------------------------------------
+// Envío del formulario
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -90,13 +59,18 @@ form.addEventListener('submit', async (e) => {
   const formData = new FormData();
   formData.append('productName', document.getElementById('productName').value.trim());
   formData.append('mainBenefit', document.getElementById('mainBenefit').value.trim());
-  formData.append('background', document.getElementById('background').value);
+  
+  // Agregamos los nuevos campos
+  const printTimeInput = document.getElementById('printTime');
+  const filamentTypeInput = document.getElementById('filamentType');
+  if(printTimeInput) formData.append('printTime', printTimeInput.value.trim());
+  if(filamentTypeInput) formData.append('filamentType', filamentTypeInput.value.trim());
+
   formData.append('image', file);
 
   toggleLoading(true);
   copyResult.style.display = 'none';
-  bgResult.style.display = 'none';
-  setStatus('Analizando la pieza y generando el fondo... esto puede tardar unos segundos.');
+  setStatus('Analizando la pieza geométrica y redactando contenido...');
 
   try {
     const response = await fetch('/api/generate', {
@@ -111,7 +85,7 @@ form.addEventListener('submit', async (e) => {
     }
 
     renderResults(data);
-    setStatus('¡Listo! Copys y fondo generados.');
+    setStatus('¡Listo! Copys, Carruseles e Historias generadas.');
   } catch (err) {
     console.error('Error generando contenido:', err);
     setStatus(`❌ Error: ${err.message}`, true);
@@ -121,24 +95,29 @@ form.addEventListener('submit', async (e) => {
 });
 
 function renderResults(data) {
-  const { copys, backgroundImageUrl } = data;
+  const { copys } = data;
 
+  // Limpiar y renderizar todas las secciones
   igVariantsEl.innerHTML = '';
   renderVariants(igVariantsEl, copys.instagram_copy);
 
   ttVariantsEl.innerHTML = '';
   renderVariants(ttVariantsEl, copys.tiktok_copy);
 
+  if (carouselVariantsEl) {
+    carouselVariantsEl.innerHTML = '';
+    renderVariants(carouselVariantsEl, copys.carousel_script);
+  }
+
+  if (storiesVariantsEl) {
+    storiesVariantsEl.innerHTML = '';
+    renderVariants(storiesVariantsEl, copys.stories_behind_the_scenes);
+  }
+
   hashtagsEl.textContent = copys.hashtags || '';
   copyResult.style.display = 'block';
-
-  bgImageEl.src = backgroundImageUrl;
-  bgImageEl.style.display = 'block';
-  bgResult.style.display = 'block';
 }
 
-// Pinta un array de variantes (strings) dentro de un contenedor, cada una
-// con su propia etiqueta "Variante N" y botón de copiar[cite: 2].
 function renderVariants(container, variants) {
   const list = Array.isArray(variants) ? variants : [variants].filter(Boolean);
 
@@ -148,7 +127,7 @@ function renderVariants(container, variants) {
 
     const label = document.createElement('div');
     label.className = 'variant-label';
-    label.textContent = `Variante ${index + 1}`;
+    label.textContent = `Opción ${index + 1}`;
 
     const pre = document.createElement('pre');
     pre.textContent = text;
@@ -167,7 +146,7 @@ function renderVariants(container, variants) {
 
 function toggleLoading(isLoading) {
   submitBtn.disabled = isLoading;
-  submitBtn.textContent = isLoading ? 'Generando...' : 'Generar copys y fondo';
+  submitBtn.textContent = isLoading ? 'Procesando...' : 'Analizar pieza y generar';
 }
 
 function setStatus(message, isError = false) {
