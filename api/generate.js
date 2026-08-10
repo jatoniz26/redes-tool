@@ -1,12 +1,9 @@
 // api/generate.js
 // TonizLab 3D — Generador de Copys + Fondo Vacío
-// Stack: Vercel Serverless Function (Node.js) + formidable v3 + Gemini 1.5 Flash + Pollinations AI
-
 import formidable from 'formidable';
 import fs from 'fs';
 
-// ⚠️ OBLIGATORIO: bodyParser debe estar desactivado para que formidable pueda
-// parsear el multipart/form-data que llega desde el frontend (FormData).
+// ⚠️ OBLIGATORIO: bodyParser debe estar desactivado para que formidable pueda parsear el FormData[cite: 1].
 export const config = {
   api: {
     bodyParser: false,
@@ -16,15 +13,13 @@ export const config = {
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-// ---------------------------------------------------------------------------
-// Helper: parsea el request multipart con formidable (Promise wrapper)
-// ---------------------------------------------------------------------------
+// Helper: parsea el request multipart con formidable[cite: 1]
 function parseForm(req) {
   return new Promise((resolve, reject) => {
     const form = formidable({
       multiples: false,
       keepExtensions: true,
-      maxFileSize: 10 * 1024 * 1024, // 10MB
+      maxFileSize: 10 * 1024 * 1024, // 10MB[cite: 1]
     });
 
     form.parse(req, (err, fields, files) => {
@@ -34,28 +29,20 @@ function parseForm(req) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Helper: convierte el archivo recibido a Base64 puro (sin el prefijo data:)
-// ---------------------------------------------------------------------------
+// Helper: convierte el archivo a Base64 puro[cite: 1]
 function fileToBase64(file) {
-  // formidable v3 entrega la ruta temporal en file.filepath
   const filePath = file.filepath || file.path;
   const buffer = fs.readFileSync(filePath);
   return buffer.toString('base64');
 }
 
-// ---------------------------------------------------------------------------
-// Helper: extrae el primer valor de un campo de formidable
-// (formidable v3 a veces entrega arrays según config)
-// ---------------------------------------------------------------------------
+// Helper: extrae el primer valor de un campo de formidable[cite: 1]
 function firstValue(field) {
   if (Array.isArray(field)) return field[0];
   return field;
 }
 
-// ---------------------------------------------------------------------------
-// Construye el prompt de texto para Gemini
-// ---------------------------------------------------------------------------
+// Construye el prompt de texto para Gemini[cite: 1]
 function buildGeminiPrompt(productName, mainBenefit, background) {
   return `
 Eres un experto en marketing digital y copywriting para redes sociales, especializado en productos de impresión 3D.
@@ -83,18 +70,16 @@ Devuelve tu respuesta ÚNICAMENTE como un objeto JSON puro (sin texto adicional,
     "Variante 3: mismo producto, ángulo distinto"
   ],
   "tiktok_copy": [
-    "Variante 1: guion corto tipo [ESCENA 1] [ESCENA 2] [ESCENA 3]",
-    "Variante 2: guion corto con otro gancho inicial",
-    "Variante 3: guion corto con otro gancho inicial"
+    "Variante 1: Gancho (caption) muy invitacional para acompañar el video, animando a la gente a quedarse a ver la pieza en acción y cómo funciona. NO uses formato de guion ni escenas.",
+    "Variante 2: Caption invitacional con un tono de curiosidad sobre el proceso de impresión 3D o el uso de este producto.",
+    "Variante 3: Caption directo y dinámico invitando a ver el resultado final de esta pieza e invitando a comentar."
   ],
   "hashtags": "Lista de hashtags relevantes separados por espacio, debe incluir obligatoriamente #TonizLab3D"
 }
 `.trim();
 }
 
-// ---------------------------------------------------------------------------
-// Llama a Gemini con la imagen en Base64 + prompt de texto
-// ---------------------------------------------------------------------------
+// Llama a Gemini con la imagen en Base64 + prompt de texto[cite: 1]
 async function callGemini(base64Image, mimeType, promptText) {
   const body = {
     contents: [
@@ -137,9 +122,7 @@ async function callGemini(base64Image, mimeType, promptText) {
   return rawText;
 }
 
-// ---------------------------------------------------------------------------
-// Parseo seguro del JSON devuelto por Gemini (limpia backticks/```json)
-// ---------------------------------------------------------------------------
+// Parseo seguro del JSON devuelto por Gemini[cite: 1]
 function safeParseGeminiJSON(rawText, productName) {
   try {
     const cleaned = rawText
@@ -149,7 +132,6 @@ function safeParseGeminiJSON(rawText, productName) {
 
     const parsed = JSON.parse(cleaned);
 
-    // Validación mínima de estructura esperada: ambos copys deben ser arrays no vacíos
     const isValidVariantArray = (val) =>
       Array.isArray(val) && val.length > 0 && val.every((v) => typeof v === 'string');
 
@@ -161,7 +143,6 @@ function safeParseGeminiJSON(rawText, productName) {
       throw new Error('Estructura JSON incompleta.');
     }
 
-    // Aseguramos el hashtag de marca aunque Gemini lo olvide
     if (!parsed.hashtags.includes('#TonizLab3D')) {
       parsed.hashtags += ' #TonizLab3D';
     }
@@ -169,7 +150,6 @@ function safeParseGeminiJSON(rawText, productName) {
     return parsed;
   } catch (err) {
     console.error('⚠️ Fallback activado. Error parseando JSON de Gemini:', err.message);
-    // JSON de respaldo por si Gemini falla o devuelve algo inválido
     return {
       instagram_copy: [
         `✨ Descubre "${productName}" de TonizLab 3D. Diseño, funcionalidad y calidad impresa capa por capa. 🖨️ ¡Escríbenos para el tuyo! 👇`,
@@ -177,20 +157,18 @@ function safeParseGeminiJSON(rawText, productName) {
         `Esto no es un objeto más, es "${productName}" hecho a medida en nuestra Bambu Lab 🖨️🔥 ¿Lo quieres en tu espacio?`,
       ],
       tiktok_copy: [
-        `[ESCENA 1] Mostrar la pieza girando 360°. [ESCENA 2] Zoom a detalles de impresión. [ESCENA 3] Producto en uso + texto: "Hecho en TonizLab 3D 🔥"`,
-        `[ESCENA 1] "POV: encontraste la solución a tu desorden" [ESCENA 2] Unboxing rápido [ESCENA 3] Producto ya colocado + CTA "Link en bio"`,
-        `[ESCENA 1] Antes (espacio desordenado) [ESCENA 2] Transición con el producto [ESCENA 3] Después + texto "TonizLab 3D lo hizo posible"`,
+        `¿Alguna vez te preguntaste cómo funciona "${productName}"? 🖨️ Quédate a ver esta pieza en acción y el resultado final que logramos en TonizLab 3D. 🔥👇`,
+        `El desorden tiene los días contados. 👀 Mira cómo esta pieza impresa en 3D entra en acción y organiza el espacio. ¡Dale play! ▶️`,
+        `De la cama de impresión directo a tu escritorio. 🚀 Acompáñanos a ver cómo diseñamos y usamos "${productName}". ¿Qué te parece el acabado? Te leemos en comentarios. 👇`
       ],
       hashtags: '#TonizLab3D #Impresion3D #BambuLab #DisenoFuncional #HechoAMano',
     };
   }
 }
 
-// ---------------------------------------------------------------------------
-// Construye el prompt visual estricto para Pollinations AI (fondo vacío)
-// ---------------------------------------------------------------------------
+// Construye el prompt visual estricto para Pollinations AI[cite: 1]
 function buildPollinationsUrl(background) {
-  const seed = Math.floor(Math.random() * 1_000_000); // seed aleatorio anti-caché
+  const seed = Math.floor(Math.random() * 1_000_000);
 
   const promptEn = [
     `extreme close-up macro shot of an empty ${background} surface`,
@@ -207,9 +185,7 @@ function buildPollinationsUrl(background) {
   return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&nologo=true`;
 }
 
-// ---------------------------------------------------------------------------
-// Handler principal
-// ---------------------------------------------------------------------------
+// Handler principal[cite: 1]
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido. Usa POST.' });
@@ -235,7 +211,6 @@ export default async function handler(req, res) {
     const base64Image = fileToBase64(imageFile);
     const mimeType = imageFile.mimetype || imageFile.type || 'image/jpeg';
 
-    // 1) Texto: Gemini analiza la imagen real
     const promptText = buildGeminiPrompt(productName, mainBenefit, background);
     let copys;
     try {
@@ -243,10 +218,9 @@ export default async function handler(req, res) {
       copys = safeParseGeminiJSON(rawGeminiText, productName);
     } catch (geminiError) {
       console.error('⚠️ Error llamando a Gemini, usando fallback:', geminiError.message);
-      copys = safeParseGeminiJSON('', productName); // fuerza el fallback
+      copys = safeParseGeminiJSON('', productName); 
     }
 
-    // 2) Imagen: URL de Pollinations con el fondo vacío
     const backgroundImageUrl = buildPollinationsUrl(background);
 
     return res.status(200).json({
