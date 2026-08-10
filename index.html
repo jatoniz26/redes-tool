@@ -1,150 +1,118 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Generador de Contenido para Redes Sociales</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TonizLab 3D — Generador de Copys</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background: #0f1115;
+      color: #e8e8ec;
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    p.subtitle { color: #9a9aa5; margin-top: 0; margin-bottom: 24px; }
+    label { display: block; margin-top: 16px; margin-bottom: 6px; font-size: 0.9rem; color: #c4c4cc; }
+    input[type="text"], select {
+      width: 100%; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid #2a2d36; background: #1a1d24; color: #e8e8ec; font-size: 0.95rem;
+    }
+    input[type="file"] {
+      width: 100%; padding: 10px 0; color: #c4c4cc;
+    }
+    #preview {
+      margin-top: 10px; max-width: 100%; max-height: 220px;
+      border-radius: 8px; display: none; border: 1px solid #2a2d36;
+    }
+    button {
+      margin-top: 24px; width: 100%; padding: 13px; border: none;
+      border-radius: 8px; background: #4f7cff; color: white; font-size: 1rem;
+      font-weight: 600; cursor: pointer;
+    }
+    button:disabled { background: #3a3d46; cursor: not-allowed; }
+    #status { margin-top: 14px; font-size: 0.9rem; color: #9a9aa5; min-height: 20px; }
+    .result-block {
+      display: none; margin-top: 30px; padding: 18px; background: #1a1d24;
+      border-radius: 10px; border: 1px solid #2a2d36;
+    }
+    .result-block h3 { margin-top: 0; font-size: 1rem; color: #c4c4cc; }
+    .result-block pre {
+      white-space: pre-wrap; word-wrap: break-word; font-family: inherit;
+      font-size: 0.92rem; line-height: 1.5; margin: 0;
+    }
+    .copy-btn {
+      margin-top: 10px; width: auto; padding: 6px 12px; font-size: 0.8rem;
+      background: #2a2d36;
+    }
+    .variant-item {
+      background: #14161c; border: 1px solid #2a2d36; border-radius: 8px;
+      padding: 12px 14px; margin-bottom: 10px;
+    }
+    .variant-item .variant-label {
+      font-size: 0.75rem; color: #6b8cff; font-weight: 600; margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .variant-item pre {
+      white-space: pre-wrap; word-wrap: break-word; font-family: inherit;
+      font-size: 0.92rem; line-height: 1.5; margin: 0;
+    }
+    .variant-item .copy-btn { margin-top: 8px; }
+    #bgImage {
+      width: 100%; border-radius: 10px; margin-top: 10px; display: none;
+      border: 1px solid #2a2d36;
+    }
+    .error { color: #ff6b6b; }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-cyan-500 selection:text-white">
+<body>
+  <h1>TonizLab 3D 🖨️</h1>
+  <p class="subtitle">Sube una foto real del producto y genera copys + fondo vacío para tu fotomontaje.</p>
 
-  <!-- Header -->
-  <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md py-4 px-6 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-      <h1 class="text-xl font-bold bg-gradient-to-r from-cyan-400 to-indigo-500 bg-clip-text text-transparent">
-        TonizLab Social AI 🚀
-      </h1>
-      <span class="text-xs px-3 py-1 bg-slate-800 text-cyan-400 rounded-full border border-slate-700">v2.0 Production</span>
-    </div>
-  </header>
+  <form id="generatorForm">
+    <label for="productName">Nombre del producto</label>
+    <input type="text" id="productName" name="productName" placeholder="Ej: Organizador Modular Escritorio" required />
 
-  <!-- Main Container -->
-  <main class="max-w-7xl mx-auto w-full p-6 grid grid-cols-1 lg:grid-cols-12 gap-8 my-6">
-    
-    <!-- Columna Izquierda: Formulario -->
-    <section class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
-      <div>
-        <h2 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
-          📝 Configura tu Publicación
-        </h2>
-        
-        <form id="generate-form" class="space-y-5">
-          <!-- Producto -->
-          <div>
-            <label for="product-name" class="block text-sm font-medium text-slate-400 mb-1.5">Nombre del Producto:</label>
-            <input 
-              type="text" 
-              id="product-name" 
-              placeholder="Ej. Matera geométrica acolchada" 
-              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition-colors"
-              required
-            >
-          </div>
+    <label for="mainBenefit">Beneficio principal</label>
+    <input type="text" id="mainBenefit" name="mainBenefit" placeholder="Ej: Organiza tu espacio sin perder estilo" required />
 
-          <!-- Beneficio Principal -->
-          <div>
-            <label for="key-benefit" class="block text-sm font-medium text-slate-400 mb-1.5">Beneficio Principal:</label>
-            <textarea 
-              id="key-benefit" 
-              rows="3" 
-              placeholder="Ej. Diseño moderno y exclusivo para espacios de trabajo." 
-              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition-colors resize-none"
-              required
-            ></textarea>
-          </div>
+    <label for="background">Fondo para el fotomontaje</label>
+    <select id="background" name="background" required>
+      <option value="madera clara">Madera clara</option>
+      <option value="madera oscura">Madera oscura</option>
+      <option value="mármol blanco">Mármol blanco</option>
+      <option value="concreto gris">Concreto gris</option>
+      <option value="tela de lino beige">Tela de lino beige</option>
+    </select>
 
-          <!-- Entorno Visual -->
-          <div>
-            <label for="bg-option" class="block text-sm font-medium text-slate-400 mb-1.5">Entorno Comercial (Instagram):</label>
-            <select 
-              id="bg-option" 
-              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-colors"
-            >
-              <option value="Fondo Oficina">Fondo Oficina</option>
-              <option value="Fondo Escritorio">Fondo Escritorio</option>
-              <option value="Fondo cocina">Fondo cocina</option>
-              <option value="Fondo exterior ciudad">Fondo exterior ciudad</option>
-              <option value="Fondo exterior parque">Fondo exterior parque</option>
-              <option value="Fondo escritorio de trabajo y PC">Fondo escritorio de trabajo y PC</option>
-            </select>
-          </div>
+    <label for="image">Foto real del producto</label>
+    <input type="file" id="image" name="image" accept="image/*" required />
+    <img id="preview" alt="Vista previa" />
 
-          <!-- Subir foto del producto -->
-          <div>
-            <label for="product-image" class="block text-sm font-medium text-slate-400 mb-1.5">Foto Real del Producto (Fondo Blanco):</label>
-            <input 
-              type="file" 
-              id="product-image" 
-              accept="image/*"
-              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20 transition-colors cursor-pointer"
-            >
-          </div>
-        </form>
-      </div>
+    <button type="submit" id="submitBtn">Generar copys y fondo</button>
+    <div id="status"></div>
+  </form>
 
-      <!-- Botón de Acción -->
-      <div class="mt-8">
-        <button 
-          type="button" 
-          id="tu-boton-accion" 
-          class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-cyan-500/20 transition-all duration-200 cursor-pointer active:scale-[0.99]"
-        >
-          Generar Publicación
-        </button>
-      </div>
-    </section>
+  <div class="result-block" id="copyResult">
+    <h3>📸 Instagram (3 variantes)</h3>
+    <div id="igVariants"></div>
 
-    <!-- Columna Derecha: Resultados y Visualización -->
-    <section class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
-      <div>
-        <h2 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
-          ✨ Resultados Generados
-        </h2>
+    <h3 style="margin-top:22px;">🎬 TikTok (3 variantes)</h3>
+    <div id="ttVariants"></div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Textos de Redes -->
-          <div class="space-y-4">
-            <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
-              <span class="text-xs font-semibold text-pink-400 uppercase tracking-wider block mb-1">📸 Instagram Copy</span>
-              <p id="instagram-output" class="text-sm text-slate-300 whitespace-pre-wrap min-h-[70px]">Aquí aparecerá el texto persuasivo para Instagram...</p>
-            </div>
+    <h3 style="margin-top:22px;">🏷️ Hashtags</h3>
+    <pre id="hashtags"></pre>
+    <button class="copy-btn" data-target="hashtags">Copiar</button>
+  </div>
 
-            <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
-              <span class="text-xs font-semibold text-cyan-400 uppercase tracking-wider block mb-1">🎬 TikTok Script</span>
-              <p id="tiktok-output" class="text-sm text-slate-300 whitespace-pre-wrap min-h-[70px]">Aquí aparecerá el guion dinámico para TikTok...</p>
-            </div>
-
-            <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-4">
-              <span class="text-xs font-semibold text-indigo-400 uppercase tracking-wider block mb-1">🏷️ Hashtags</span>
-              <p id="hashtags-output" class="text-xs text-indigo-300/90 font-mono">#hashtags</p>
-            </div>
-          </div>
-
-          <!-- Imagen Generada -->
-          <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800/80 rounded-xl p-4 relative min-h-[280px]">
-            <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider absolute top-4 left-4">🎨 Visual del Producto</span>
-            
-            <div class="w-full h-full flex items-center justify-center mt-6">
-              <img 
-                id="imagen-resultado" 
-                alt="Vista previa de imagen" 
-                class="max-w-full max-h-[300px] rounded-lg shadow-md object-cover hidden"
-              />
-              <div id="image-placeholder" class="text-slate-600 text-sm text-center p-6 border border-dashed border-slate-800 rounded-lg w-full h-48 flex items-center justify-center">
-                La imagen generada aparecerá aquí
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Footer -->
-  <footer class="text-center py-6 text-xs text-slate-600 border-t border-slate-900">
-    Desarrollado para automatización de marketing y redes sociales.
-  </footer>
+  <div class="result-block" id="bgResult">
+    <h3>🖼️ Fondo vacío generado</h3>
+    <img id="bgImage" alt="Fondo generado" />
+    <button class="copy-btn" id="downloadBg" style="margin-top:12px;">Descargar fondo</button>
+  </div>
 
   <script src="app.js"></script>
 </body>
