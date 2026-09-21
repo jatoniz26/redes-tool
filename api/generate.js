@@ -9,7 +9,8 @@ export const config = {
 };
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`;
+// Cambiamos al modelo gemini-2.5-flash para garantizar estabilidad y evitar errores 503
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 function parseForm(req) {
   return new Promise((resolve, reject) => {
@@ -166,7 +167,6 @@ export default async function handler(req, res) {
       copys.instagram_copy[0] = `⚠️ ERROR: ${geminiError.message}`;
     }
 
-    // Ya no devolvemos URL de background
     return res.status(200).json({ success: true, copys });
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
