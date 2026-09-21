@@ -9,8 +9,8 @@ export const config = {
 };
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-// Cambiamos al modelo gemini-2.5-flash para garantizar estabilidad y evitar errores 503
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+// Nombre exacto y oficial exigido por Google AI Studio
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 function parseForm(req) {
   return new Promise((resolve, reject) => {
@@ -82,7 +82,8 @@ Devuelve tu respuesta ÚNICAMENTE como un objeto JSON puro (sin texto adicional,
 `.trim();
 }
 
-async function callGemini(base64Image, mimeType, promptText) {
+// Función con reintento automático por saturación temporal (503)
+async function callGeminiWithRetry(base64Image, mimeType, promptText, retries = 3, delay = 2000) {
   const body = {
     contents: [
       {
@@ -98,22 +99,35 @@ async function callGemini(base64Image, mimeType, promptText) {
     },
   };
 
-  const response = await fetch(GEMINI_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Gemini API error (${response.status}): ${errText}`);
+      if (response.ok) {
+        const data = await response.json();
+        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (rawText) return rawText;
+        throw new Error('Gemini no devolvió contenido de texto válido.');
+      }
+
+      const errText = await response.text();
+      // Si es error de servidor ocupado (503) y quedan intentos, esperamos y reintentamos
+      if (response.status === 503 && attempt < retries) {
+        console.warn(`⚠️ Intento ${attempt} fallido por alta demanda (503). Reintentando en ${delay}ms...`);
+        await new Promise((res) => setTimeout(res, delay));
+        continue;
+      }
+
+      throw new Error(`Gemini API error (${response.status}): ${errText}`);
+    } catch (err) {
+      if (attempt === retries) throw err;
+      await new Promise((res) => setTimeout(res, delay));
+    }
   }
-
-  const data = await response.json();
-  const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!rawText) throw new Error('Gemini no devolvió contenido válido.');
-  return rawText;
 }
 
 function safeParseGeminiJSON(rawText, productName) {
@@ -159,7 +173,7 @@ export default async function handler(req, res) {
     
     let copys;
     try {
-      const rawGeminiText = await callGemini(base64Image, mimeType, promptText);
+      const rawGeminiText = await callGeminiWithRetry(base64Image, mimeType, promptText);
       copys = safeParseGeminiJSON(rawGeminiText, productName);
     } catch (geminiError) {
       console.error('Error llamada:', geminiError.message);
